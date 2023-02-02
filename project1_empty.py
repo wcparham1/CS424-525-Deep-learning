@@ -21,17 +21,25 @@ class Neuron:
         self.lr = lr
         
         #if no weights are specified set them to arbitrary/random values
-        '''
         if(weights == None):
-            self.weights = [input_num+1]
-            i = 0
-            for item in (self.weights-1):
-                item = i + 1
-                i = i + 1
-        '''
+            self.weights = [1] * self.input_num
+            
+            #initialize random weight values
+            for i in range(0, len(self.weights)):
+                self.weights[i] = np.random.randint(1,9)
+                
+
+            #print("This is self.weights: ", self.weights)
+        else:
+            self.weights = weights
         
-        #account for bias by setting an additional value in weight vector to 1.
-        self.weights[input_num+1] = 1
+        #append 1 to represent bias
+        self.weights.append(1)
+    
+        print(self.activation,' ', self.input_num, ' ', self.lr, '\n')
+        for item in self.weights:
+            print(item)
+        
         print('constructor')    
         
     #This method returns the activation of the net
@@ -97,6 +105,11 @@ class NeuralNetwork:
 if __name__=="__main__":
     if (len(sys.argv)<2):
         print('a good place to test different parts of your code')
+        
+        ner1 = Neuron(0, 2, 0.3)
+        
+        
+        
         
     elif (sys.argv[1]=='example'):
         print('run example from class (single step)')
