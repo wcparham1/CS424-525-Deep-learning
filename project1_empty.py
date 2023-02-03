@@ -3,8 +3,8 @@ import sys
 """
 For this entire file there are a few constants:
 activation:
-0 - linear
-1 - logistic (only one supported)
+0 - linear represented as: f(x) = x
+1 - logistic (only one supported) represented as: 1/(1+np.exp(-x))
 loss:
 0 - sum of square errors
 1 - binary cross entropy
@@ -14,6 +14,10 @@ loss:
 # A class which represents a single neuron
 class Neuron:
     
+    #store input, output, and partial derivative for each weight
+    n_inputs = []
+    n_outputs = []
+    partial_dervs = []    
     #initilize neuron with activation type, number of inputs, learning rate, and possibly with set weights
     def __init__(self,activation, input_num, lr, weights=None):
         self.activation = activation
@@ -27,23 +31,25 @@ class Neuron:
             #initialize random weight values
             for i in range(0, len(self.weights)):
                 self.weights[i] = np.random.randint(1,9)
-                
-
-            #print("This is self.weights: ", self.weights)
         else:
             self.weights = weights
-        
+  
         #append 1 to represent bias
         self.weights.append(1)
     
-        print(self.activation,' ', self.input_num, ' ', self.lr, '\n')
-        for item in self.weights:
-            print(item)
+        #print(self.activation, ' ', self.input_num, ' ', self.lr, ' ', self.weights)
         
         print('constructor')    
         
-    #This method returns the activation of the net
+    #This method returns the activation of the net (net same as input for neuron)
     def activate(self,net):
+        
+        #first check for which activation function the neuron is using
+        if (self.activation == 0):
+            return net
+        
+        elif (self.activation == 1):
+            return (1/(1+np.exp(-net)))
         print('activate')   
         
     #Calculate the output of the neuron should save the input and output for back-propagation.   
@@ -106,7 +112,7 @@ if __name__=="__main__":
     if (len(sys.argv)<2):
         print('a good place to test different parts of your code')
         
-        ner1 = Neuron(0, 2, 0.3)
+        ner1 = Neuron(0, 3, 0.3)
         
         
         
