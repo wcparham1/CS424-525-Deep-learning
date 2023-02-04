@@ -59,22 +59,22 @@ class Neuron:
         
         #calculate the input (net) for the neuron
         counter = 0
-        inner_count = 0
+        j = 0
         for i in range(0, len(input)):
-            for j in range(0, (len(self.weights)-1)):
-                #print("i: ", input[i], " j: ", self.weights[j], " counter: ", counter)
+            while j < (len(self.weights)-1):
                 #append each individual input for backpropagation later
                 self.n_inputs.append(input[i] * self.weights[j])
                 counter += 1
+                j += 1
                 if(counter % len(input) == 0):
-                    #print("this is counter: ", counter)
                     break
-            inner_count += 1
-        #add bias
-        
+                
+                
+        #find the sum of the inputs * weights
         for item in self.n_inputs:
-            print(item)
-            
+            net += item
+        
+        #add bias weight
         net += self.weights[len(self.weights) - 1] 
         print("this is final net: ", net)
         print('calculate')
