@@ -53,28 +53,47 @@ class Neuron:
         
     #Calculate the output of the neuron should save the input and output for back-propagation.  --Calculate calls activate-- 
     def calculate(self,input):
+        #each input will correspond with each weight in the same place in the weights array
         
-        neuron_calculations = [0] * ((int)((len(self.weights)-1)/len(input)))
-      
+        #find the sum of the inputs * weights
+        net = 0        
+        for i in range(0, len(input)):
+            net += input[i] * self.weights[i]
+        
+        #add bias weight
+        net += self.weights[len(self.weights) - 1]
+         
+        print("this is final net: ", net)
+        print('calculate')
+        
+        print(self.weights)
+        print('\n')
+        print(input)
+        '''
+        #initialize results matrix to hold all weight * input values
         w, h = len(input), (int)((len(self.weights)-1)/len(input))
         results = [[0 for x in range(w)] for y in range(h)]
         
-        mat_no_bias = []
-                
+        #create a matrix to hold all values aside from bias
+        mat_no_bias = []        
         for i in range(0, (len(self.weights)-1)):
             mat_no_bias.append(self.weights[i])
         
+        #reshape matrix for easier computation
         mat_no_bias = np.array(mat_no_bias)
-        mat_no_bias = mat_no_bias.reshape(3,3)
+        mat_no_bias = mat_no_bias.reshape(len(input),(int)((len(self.weights)-1)/len(input)))
         
+        #find each value in results matrix
         for i in range(0, len(mat_no_bias)):
             for j in range(0, len(mat_no_bias[i])):
                 
                 results[i][j] = mat_no_bias[i][j] * input[i]
                 print(mat_no_bias[i][j])
         
+        #transpose results matrix to sum each row
         results = np.transpose(results)
         
+        #find the sum of each row of the matrix
         for i in range(0, len(results)):
             row_sum = 0
             for j in range(0, len(results[i])):
@@ -83,17 +102,9 @@ class Neuron:
             #adding bias
             row_sum += 1
             neuron_calculations[i] = row_sum
-            
-            
-        print(neuron_calculations)
-        print(results)
         
-                
-        #find the sum of the inputs * weights
-        #add bias weight
-        #net += self.weights[len(self.weights) - 1] 
-        #print("this is final net: ", net)
-        #print('calculate')
+        '''     
+        
 
     #This method returns the derivative of the activation function with respect to the net   
     def activationderivative(self):
@@ -155,7 +166,7 @@ if __name__=="__main__":
     if (len(sys.argv)<2):
         print('a good place to test different parts of your code')
         
-        ner1 = Neuron(0, 3, 0.3, [1,2,3,5,7,9,2,7,1])
+        ner1 = Neuron(0, 3, 0.3, [1,5,2])
         #ner1.print_info()
         ner1.calculate([2,2,3])
         
