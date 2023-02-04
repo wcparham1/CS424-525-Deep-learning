@@ -15,8 +15,8 @@ loss:
 class Neuron:
     
     #store input, output, and partial derivative for each weight
-    n_inputs = []
-    n_outputs = []
+    n_input = []
+    n_output = 0
     partial_dervs = []    
     
     #initilize neuron with activation type, number of inputs, learning rate, and possibly with set weights
@@ -45,16 +45,19 @@ class Neuron:
         
         #first check for which activation function the neuron is using
         if (self.activation == 0):
+            print("linear activation")
             return net
         
         elif (self.activation == 1):
-            return (1/(1+np.exp(-net)))
+            #save output for backpropagation
+            self.output = (1/(1+np.exp(-net)))
+            print("logistic activation")
+            return self.n_output
         print('activate')   
         
     #Calculate the output of the neuron should save the input and output for back-propagation.  --Calculate calls activate-- 
     def calculate(self,input):
         #each input will correspond with each weight in the same place in the weights array
-        
         #find the sum of the inputs * weights
         net = 0        
         for i in range(0, len(input)):
@@ -62,13 +65,14 @@ class Neuron:
         
         #add bias weight
         net += self.weights[len(self.weights) - 1]
-         
+        
+        #save input for backpropagation
+        self.n_input = net
+        
+        self.activate(net)
+        
         print("this is final net: ", net)
         print('calculate')
-        
-        print(self.weights)
-        print('\n')
-        print(input)
         '''
         #initialize results matrix to hold all weight * input values
         w, h = len(input), (int)((len(self.weights)-1)/len(input))
@@ -166,8 +170,8 @@ if __name__=="__main__":
     if (len(sys.argv)<2):
         print('a good place to test different parts of your code')
         
-        ner1 = Neuron(0, 3, 0.3, [1,5,2])
-        #ner1.print_info()
+        ner1 = Neuron(1, 3, 0.3, [1,5,2])
+        ner1.print_info()
         ner1.calculate([2,2,3])
         
     elif (sys.argv[1]=='example'):
