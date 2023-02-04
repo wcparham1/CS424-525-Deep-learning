@@ -18,6 +18,7 @@ class Neuron:
     n_inputs = []
     n_outputs = []
     partial_dervs = []    
+    
     #initilize neuron with activation type, number of inputs, learning rate, and possibly with set weights
     def __init__(self,activation, input_num, lr, weights=None):
         self.activation = activation
@@ -36,8 +37,6 @@ class Neuron:
   
         #append 1 to represent bias
         self.weights.append(1)
-    
-        #print(self.activation, ' ', self.input_num, ' ', self.lr, ' ', self.weights)
         
         print('constructor')    
         
@@ -52,8 +51,32 @@ class Neuron:
             return (1/(1+np.exp(-net)))
         print('activate')   
         
-    #Calculate the output of the neuron should save the input and output for back-propagation.   
+    #Calculate the output of the neuron should save the input and output for back-propagation.  --Calculate calls activate-- 
     def calculate(self,input):
+        print("input array length: ", len(input))
+        #variable to hold the net as it is being calculated
+        net = 0
+        
+        #calculate the input (net) for the neuron
+        counter = 0
+        inner_count = 0
+        for i in range(0, len(input)):
+            for j in range(0, (len(self.weights)-1)):
+                #print("i: ", input[i], " j: ", self.weights[j], " counter: ", counter)
+                #append each individual input for backpropagation later
+                self.n_inputs.append(input[i] * self.weights[j])
+                counter += 1
+                if(counter % len(input) == 0):
+                    #print("this is counter: ", counter)
+                    break
+            inner_count += 1
+        #add bias
+        
+        for item in self.n_inputs:
+            print(item)
+            
+        net += self.weights[len(self.weights) - 1] 
+        print("this is final net: ", net)
         print('calculate')
 
     #This method returns the derivative of the activation function with respect to the net   
@@ -67,6 +90,10 @@ class Neuron:
     #Simply update the weights using the partial derivatives and the leranring weight
     def updateweight(self):
         print('updateweight')
+        
+    def print_info(self):
+        print(self.activation, ' ', self.input_num, ' ', self.lr, ' ', self.weights)
+        
 
         
 #A fully connected layer        
@@ -112,10 +139,9 @@ if __name__=="__main__":
     if (len(sys.argv)<2):
         print('a good place to test different parts of your code')
         
-        ner1 = Neuron(0, 3, 0.3)
-        
-        
-        
+        ner1 = Neuron(0, 3, 0.3, [3,2,2,4])
+        #ner1.print_info()
+        ner1.calculate([1,2])
         
     elif (sys.argv[1]=='example'):
         print('run example from class (single step)')
