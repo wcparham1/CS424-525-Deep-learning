@@ -27,7 +27,7 @@ class Neuron:
         
         #if no weights are specified set them to arbitrary/random values
         if(weights is None):
-            self.weights = [1] * self.input_num
+            self.weights = [1] * (self.input_num + 1)  #add 1 here to represent the bias input
             
             #initialize random weight values
             for i in range(0, len(self.weights)):
@@ -36,7 +36,7 @@ class Neuron:
             self.weights = weights
 
         #append 1 to represent bias
-        self.weights = np.append(self.weights, 1)
+        #self.weights = np.append(self.weights, 1)
         
     #This method returns the activation of the net (net same as input for neuron)
     def activate(self,net):
@@ -57,17 +57,19 @@ class Neuron:
     def calculate(self,input):
         #each input will correspond with each weight in the same place in the weights array
         #find the sum of the inputs * weights
-        
-        #print('neuron weight: ', self.weights, ' neuron input: ', input)
-        
+        #print('weight array: ', self.weights)
         net = 0        
-        for i in range(0, len(input)):
+        for i in range(0, (len(input))):
             net += input[i] * self.weights[i]
             print('this is input[i]: ', input[i], ' this is self.weights[i]: ', self.weights[i])
         
-        #add bias weight
-        net += self.weights[len(self.weights) - 1]
+        #print('this is bias: ', self.weights[-1] * input[-1])
+        #print('this is net before bias: ', net)
         
+        #add bias weight
+        #net += self.weights[-1] * input[-1]
+        
+        #print('this is net after bias: ', net)
         #print('this is net after bias in neuron:', net)
         
         #save input for backpropagation
@@ -113,7 +115,6 @@ class FullyConnected:
             new_neuron = Neuron(self.activation, self.input_num, self.lr, self.weights[i])
             self.neuron_list.append(new_neuron)
         
-        
     #calcualte the output of all the neurons in the layer and return a vector with those values (go through the neurons and call the calcualte() method)      
     def calculate(self, input):
         neuron_calculations = []
@@ -130,7 +131,6 @@ class FullyConnected:
     
     def print_info(self):
         print("fully_connected: num neurons: ", self.numOfNeurons, ' activation: ', self.activation, ' input_num: ', self.input_num, ' lr: ', self.lr, ' weights: ', self.weights)
- 
            
            
 #An entire neural network        
@@ -165,10 +165,11 @@ class NeuralNetwork:
     
     #Given an input, calculate the output (using the layers calculate() method)
     def calculate(self,input):
-        
+        print('this is input: ', input)
         current_input = input
         for i in range(0, len(self.layer_list)):
-            print('this is current input:', current_input)
+            #print('this is current input:', current_input)
+            current_input.append(1)
             current_input = self.layer_list[i].calculate(current_input)
         print('calculate')
         
@@ -199,8 +200,8 @@ if __name__=="__main__":
             #lr
             #weights
             
-        neural_net = NeuralNetwork(2, 2, 2, 0, 0, 0.5, [[[1,5],[2,7]],[[2,4],[3,9]]])
-        neural_net.calculate([2,2])
+        neural_net = NeuralNetwork(2, 2, 2, 1, 0, 0.5, [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]])
+        neural_net.calculate([.05,.10])
         
     elif (sys.argv[1]=='example'):
         print('run example from class (single step)')
