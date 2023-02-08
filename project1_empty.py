@@ -173,17 +173,22 @@ class NeuralNetwork:
         #print('constructor') 
     
     #Given an input, calculate the output (using the layers calculate() method)
-    def calculate(self,input):
-        #print('this is input: ', input)
-        current_input = input
+    def calculate(self,x):
+        print('this is input: ', x)
+        current_input = x
         for i in range(0, len(self.layer_list)):
             #print('this is current input:', current_input)
             current_input.append(1.0)
             current_input = self.layer_list[i].calculate(current_input)
-        #print('calculate')
+        
+        self.y_hat = current_input
+        return current_input
+        print('calculate')
         
     #Given a predicted output and ground truth output simply return the loss (depending on the loss function)
     def calculateloss(self,yp,y):
+        # MSE
+        self.loss = np.mean(np.square(yp - y))
         print('calculateloss')
     
     #Given a predicted output and ground truth output simply return the derivative of the loss (depending on the loss function)        
@@ -192,6 +197,11 @@ class NeuralNetwork:
     
     #Given a single input and desired output preform one step of backpropagation (including a forward pass, getting the derivative of the loss, and then calling calcwdeltas for layers with the right values         
     def train(self,x,y):
+        self.calculate(x)
+        self.calculateloss(self.y_hat, y)
+        
+        for j in range(len(self.layer_list)):
+            self.layer_list[i].calcwtimesdelta(self.loss * self.lr)    
         print('train')
     
     def print_info(self):
@@ -212,7 +222,8 @@ if __name__=="__main__":
         #change inputs, we are using the incorrect numbers as input, and change number of neurons in the layer to be an array.
         #old weights: [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]]
         neural_net = NeuralNetwork(2, 2, 2, 1, 0, 0.5, [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]])
-        neural_net.calculate([.05,.10])
+        ret = neural_net.calculate([.05,.10])
+        print(ret)
         
     elif (sys.argv[1]=='example'):
         print('run example from class (single step)')
