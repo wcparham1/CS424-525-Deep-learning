@@ -57,9 +57,12 @@ class Neuron:
         #each input will correspond with each weight in the same place in the weights array
         #find the sum of the inputs * weights
         net = 0        
+        sum = 0
         for i in range(0, (len(input))):
-            net += (input[i] * self.weights[i])
-            print('this is input[i]: ', input[i], ' this is self.weights[i]: ', self.weights[i], 'this is weight * input: ', round(input[i]*self.weights[i], 3), ' this is net: ', net)
+            #net += round((input[i] * self.weights[i]), 4)
+            sum = input[i] * self.weights[i]
+            net += sum
+            print('this is input[i]: ', input[i], ' this is self.weights[i]: ', self.weights[i], 'this is weight * input: ', input[i]*self.weights[i], ' this is net: ',net)
         
         #add bias weight
         #net += self.weights[-1] * input[-1]
@@ -67,7 +70,11 @@ class Neuron:
         #save input for backpropagation
         self.n_input = net
         
-       # print('output before activate: ', output)
+        #print('net before rounding: ', net)
+        #net = round(net, 2)
+        #print('net after rounding: ', net)
+       
+        print('this is net before activation: ', net)
         output = self.activate(net)
         print('this is result of activate: ', output)
         return output
@@ -160,20 +167,20 @@ class NeuralNetwork:
             else:
                 new_layer = FullyConnected(self.numOfNeurons, self.activation, self.inputSize, self.lr, self.weights[i]) 
             
-            print(new_layer.weights)
+            #print(new_layer.weights)
             self.layer_list.append(new_layer)
             
-        print('constructor') 
+        #print('constructor') 
     
     #Given an input, calculate the output (using the layers calculate() method)
     def calculate(self,input):
-        print('this is input: ', input)
+        #print('this is input: ', input)
         current_input = input
         for i in range(0, len(self.layer_list)):
             #print('this is current input:', current_input)
             current_input.append(1.0)
             current_input = self.layer_list[i].calculate(current_input)
-        print('calculate')
+        #print('calculate')
         
     #Given a predicted output and ground truth output simply return the loss (depending on the loss function)
     def calculateloss(self,yp,y):
@@ -202,7 +209,9 @@ if __name__=="__main__":
             #lr
             #weights
             
-        neural_net = NeuralNetwork(2, 2, 2, 1, 0, 0.5, [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]])
+        #change inputs, we are using the incorrect numbers as input, and change number of neurons in the layer to be an array.
+        #old weights: [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]]
+        neural_net = NeuralNetwork(2, 2, 2, 1, 0, 0.5, [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]])
         neural_net.calculate([.05,.10])
         
     elif (sys.argv[1]=='example'):
