@@ -10,7 +10,6 @@ loss:
 1 - binary cross entropy
 """
 
-
 # A class which represents a single neuron
 class Neuron:
     
@@ -50,37 +49,39 @@ class Neuron:
         elif (self.activation == 1):
             #save output for backpropagation
             self.output = (1/(1+np.exp(-net)))
-            print("logistic activation")
-            return (1/(1+np.exp(-net)))
+            #print("logistic activation")
+            return 1/(1+np.exp(-net))
         
     #Calculate the output of the neuron should save the input and output for back-propagation.  --Calculate calls activate-- 
     def calculate(self,input):
         #each input will correspond with each weight in the same place in the weights array
         #find the sum of the inputs * weights
-        #print('weight array: ', self.weights)
         net = 0        
         for i in range(0, (len(input))):
-            net += input[i] * self.weights[i]
-            print('this is input[i]: ', input[i], ' this is self.weights[i]: ', self.weights[i])
-        
-        #print('this is bias: ', self.weights[-1] * input[-1])
-        #print('this is net before bias: ', net)
+            net += (input[i] * self.weights[i])
+            print('this is input[i]: ', input[i], ' this is self.weights[i]: ', self.weights[i], 'this is weight * input: ', round(input[i]*self.weights[i], 3), ' this is net: ', net)
         
         #add bias weight
         #net += self.weights[-1] * input[-1]
         
-        #print('this is net after bias: ', net)
-        #print('this is net after bias in neuron:', net)
-        
         #save input for backpropagation
         self.n_input = net
         
+       # print('output before activate: ', output)
         output = self.activate(net)
-        print('this is output: ', output)
+        print('this is result of activate: ', output)
         return output
      
     #This method returns the derivative of the activation function with respect to the net   
     def activationderivative(self):
+        
+        #self.n_input = net
+        if(self.activation == 0):
+            return (1)
+        
+        elif(self.activation == 1):
+            return (np.exp(self.n_input))/((np.exp(self.n_input)+1)**2)
+            
         print('activationderivative')   
     
     #This method calculates the partial derivative for each weight and returns the delta*w to be used in the previous layer
@@ -120,6 +121,7 @@ class FullyConnected:
         neuron_calculations = []
         
         for i in range (0, len(self.neuron_list)):
+            print('\n')
             temp = self.neuron_list[i].calculate(input)
             neuron_calculations.append(temp)
     
@@ -169,7 +171,7 @@ class NeuralNetwork:
         current_input = input
         for i in range(0, len(self.layer_list)):
             #print('this is current input:', current_input)
-            current_input.append(1)
+            current_input.append(1.0)
             current_input = self.layer_list[i].calculate(current_input)
         print('calculate')
         
