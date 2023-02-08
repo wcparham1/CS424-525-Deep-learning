@@ -93,7 +93,16 @@ class Neuron:
     
     #This method calculates the partial derivative for each weight and returns the delta*w to be used in the previous layer
     def calcpartialderivative(self, wtimesdelta):
+        dE_dw = np.zeros(self.input_num+1)
+        dE_dO = np.sum(wtimesdelta)
+        dO_dnet = self.activationderivative()
+
+        delta = dE_dO * dO_dnet
+        for i in range(self.input_num):
+           # dE_dw = delta * weights
         print('calcpartialderivative') 
+
+        #return delta*weights
     
     #Simply update the weights using the partial derivatives and the leranring weight
     def updateweight(self):
@@ -140,7 +149,8 @@ class FullyConnected:
         for i, neuron in enumerate(self.neuron_list):
             neuron_delta = neuron.calcpartialderivative(wtimesdelta[:,i])
             ret[i,:] = neuron_delta
-        
+            # neuron.updateweight()
+        return ret
         print('calcwdeltas') 
     
     def print_info(self):
