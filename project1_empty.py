@@ -136,6 +136,11 @@ class FullyConnected:
             
     #given the next layer's w*delta, should run through the neurons calling calcpartialderivative() for each (with the correct value), sum up its ownw*delta, and then update the wieghts (using the updateweight() method). I should return the sum of w*delta.          
     def calcwdeltas(self, wtimesdelta):
+        ret = np.zeros((self.numOfNeurons, self.input_num))
+        for i, neuron in enumerate(self.neuron_list):
+            neuron_delta = neuron.calcpartialderivative(wtimesdelta[:,i])
+            ret[i,:] = neuron_delta
+        
         print('calcwdeltas') 
     
     def print_info(self):
@@ -175,10 +180,12 @@ class NeuralNetwork:
     #Given an input, calculate the output (using the layers calculate() method)
     def calculate(self,x):
         print('this is input: ', x)
+        x = np.array(x)
         current_input = x
         for i in range(0, len(self.layer_list)):
             #print('this is current input:', current_input)
-            current_input.append(1.0)
+            # current_input.append(1.0)
+            current_input = np.concatenate((current_input, [1.0]))
             current_input = self.layer_list[i].calculate(current_input)
         
         self.y_hat = current_input
@@ -193,15 +200,21 @@ class NeuralNetwork:
     
     #Given a predicted output and ground truth output simply return the derivative of the loss (depending on the loss function)        
     def lossderiv(self,yp,y):
-        print('lossderiv')
+        return -(y-yp)
     
     #Given a single input and desired output preform one step of backpropagation (including a forward pass, getting the derivative of the loss, and then calling calcwdeltas for layers with the right values         
     def train(self,x,y):
         self.calculate(x)
         self.calculateloss(self.y_hat, y)
-        
-        for j in range(len(self.layer_list)):
-            self.layer_list[i].calcwtimesdelta(self.loss * self.lr)    
+        delta = np.empty((1,self.numOfNeurons))
+
+        for i in range(self.numOfNeurons):
+            delta[:,i] = self.lossderiv(self.y_hat[i], y[i])
+        # print("delta", delta)
+        for j in reversed(range(len(self.layer_list))):
+            delta = self.layer_list[i].calcwdeltas(delta)
+            print("delta", j, delta)
+
         print('train')
     
     def print_info(self):
@@ -222,8 +235,9 @@ if __name__=="__main__":
         #change inputs, we are using the incorrect numbers as input, and change number of neurons in the layer to be an array.
         #old weights: [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]]
         neural_net = NeuralNetwork(2, 2, 2, 1, 0, 0.5, [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]])
-        ret = neural_net.calculate([.05,.10])
-        print(ret)
+        # ret = neural_net.calculate([.05,.10])
+        # print(ret)
+        neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
         
     elif (sys.argv[1]=='example'):
         print('run example from class (single step)')
