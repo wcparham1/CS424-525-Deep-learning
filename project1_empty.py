@@ -34,13 +34,9 @@ class Neuron:
         else:
             self.weights = weights
 
-        #append 1 to represent bias
-        #self.weights = np.append(self.weights, 1)
         
     #This method returns the activation of the net (net same as input for neuron)
     def activate(self,net):
-        
-        #first check for which activation function the neuron is using
         if (self.activation == 0):
             #save output for backpropagation
             self.output = net
@@ -49,7 +45,6 @@ class Neuron:
         elif (self.activation == 1):
             #save output for backpropagation
             self.output = (1/(1+np.exp(-net)))
-            #print("logistic activation")
             return 1/(1+np.exp(-net))
         
     #Calculate the output of the neuron should save the input and output for back-propagation.  --Calculate calls activate-- 
@@ -59,53 +54,55 @@ class Neuron:
         net = 0        
         sum = 0
         for i in range(0, (len(input))):
-            #net += round((input[i] * self.weights[i]), 4)
             sum = input[i] * self.weights[i]
             net += sum
-            print('this is input[i]: ', input[i], ' this is self.weights[i]: ', self.weights[i], 'this is weight * input: ', input[i]*self.weights[i], ' this is net: ',net)
-        
-        #add bias weight
-        #net += self.weights[-1] * input[-1]
         
         #save input for backpropagation
         self.n_input = net
         
-        #print('net before rounding: ', net)
-        #net = round(net, 2)
-        #print('net after rounding: ', net)
-       
         print('this is net before activation: ', net)
         output = self.activate(net)
+        self.n_output = output
         print('this is result of activate: ', output)
         return output
      
     #This method returns the derivative of the activation function with respect to the net   
     def activationderivative(self):
-        
-        #self.n_input = net
         if(self.activation == 0):
             return (1)
-        
         elif(self.activation == 1):
-            return (np.exp(self.n_input))/((np.exp(self.n_input)+1)**2)
-            
+            #return (np.exp(self.n_input))/((np.exp(self.n_input)+1)**2)
+            return self.output * (1 - self.output)
         print('activationderivative')   
     
     #This method calculates the partial derivative for each weight and returns the delta*w to be used in the previous layer
     def calcpartialderivative(self, wtimesdelta):
+        #delta of output sub x can be written as derivative of the loss func * derivative of activation function
+        #derivatice of the error with respect to weight can be expressed as delta of current node
+
+        self.partial_derivative = self.activationderivative() * wtimesdelta * self.n_input
+        
+        self.partial_dervs = np.dot(self.partial_derivative, self.weights)
+        
+        #remember that self.pertial_dervs is an np_array
+        return self.partial_dervs
+        
+        #return delta*weights
+        '''
         dE_dw = np.zeros(self.input_num+1)
         dE_dO = np.sum(wtimesdelta)
         dO_dnet = self.activationderivative()
 
         delta = dE_dO * dO_dnet
-        for i in range(self.input_num):
+        #for i in range(self.input_num):
            # dE_dw = delta * weights
-        print('calcpartialderivative') 
-
-        #return delta*weights
+        #print('calcpartialderivative') 
+        '''
     
     #Simply update the weights using the partial derivatives and the leranring weight
     def updateweight(self):
+        for i in range(0, len(self.weights)):
+            self.weights[i] = self.weights[i] - (self.lr * self.partial_dervs[i])
         print('updateweight')
         
     def print_info(self):
@@ -143,7 +140,7 @@ class FullyConnected:
     
         return neuron_calculations
             
-    #given the next layer's w*delta, should run through the neurons calling calcpartialderivative() for each (with the correct value), sum up its ownw*delta, and then update the wieghts (using the updateweight() method). I should return the sum of w*delta.          
+    #given the next layer's w*delta, should run through the neurons calling calcpartialderivative() for each (with the correct value), sum up its own w*delta, and then update the wieghts (using the updateweight() method). I should return the sum of w*delta.          
     def calcwdeltas(self, wtimesdelta):
         ret = np.zeros((self.numOfNeurons, self.input_num))
         for i, neuron in enumerate(self.neuron_list):
@@ -160,32 +157,42 @@ class FullyConnected:
 #An entire neural network        
 class NeuralNetwork:
     #initialize with the number of layers, number of neurons in each layer (vector), input size, activation (for each layer), the loss function, the learning rate and a 3d matrix of weights weights (or else initialize randomly)
-    def __init__(self,numOfLayers,numOfNeurons, inputSize, activation, loss, lr, weights=None):
+    def __init__(self, numOfLayers, numOfNeurons, inputSize, activation, loss, lr, weights=None):
         self.numOfLayers = numOfLayers
-        self.numOfNeurons = numOfNeurons
+        self.numOfNeurons = list(numOfNeurons)
         self.inputSize = inputSize
         self.activation = activation
         self.loss = loss
         self.lr = lr
         self.layer_list = []
         
+        
         if(weights is None):
-            weights = np.random.randint(1,9,(self.numOfLayers*self.numOfNeurons*self.inputSize))
-            self.weights = np.reshape(weights, [self.numOfLayers,self.numOfNeurons,self.inputSize])
+            #weights = np.random.randint(1,9,(self.numOfLayers*self.numOfNeurons*self.inputSize))
+            #self.weights = np.reshape(weights, [self.numOfLayers,self.numOfNeurons,self.inputSize])
+            self.weights = []
+            llsize = self.inputSize
+            for i in range(self.numOfLayers):
+                self.weights.append([])
+                for j in range(self.numOfNeurons[i]):
+                    self.weights[i].append([])
+                    for k in range(llsize):
+                        self.weights[i][j].append(np.random.random())
+                llsize = self.numOfNeurons[i]
         else:
             self.weights = weights
 
         for i in range(0, self.numOfLayers):
             if(self.numOfLayers <= 1):
-                new_layer = FullyConnected(self.numOfNeurons, self.activation, self.inputSize, self.lr, self.weights)
+                new_layer = FullyConnected(self.numOfNeurons[i], self.activation, self.inputSize, self.lr, self.weights)
 
             else:
-                new_layer = FullyConnected(self.numOfNeurons, self.activation, self.inputSize, self.lr, self.weights[i]) 
+                new_layer = FullyConnected(self.numOfNeurons[i], self.activation, self.inputSize, self.lr, self.weights[i]) 
             
             #print(new_layer.weights)
             self.layer_list.append(new_layer)
-            
-        #print('constructor') 
+         
+        print('constructor') 
     
     #Given an input, calculate the output (using the layers calculate() method)
     def calculate(self,x):
@@ -233,21 +240,23 @@ class NeuralNetwork:
 if __name__=="__main__":
     if (len(sys.argv)<2):
         #network parameters:
-            #self -- omitted
-            #numOfLayers 
-            #numOfNeurons
-            #inputSize
-            #activation
-            #loss
-            #lr
-            #weights
-            
+            #self -- omitted 1
+            #numOfLayers     2
+            #numOfNeurons    3
+            #inputSize       4
+            #activation      5
+            #loss            6
+            #lr              7
+            #weights         8
+        x = [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]]
         #change inputs, we are using the incorrect numbers as input, and change number of neurons in the layer to be an array.
-        #old weights: [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]]
-        neural_net = NeuralNetwork(2, 2, 2, 1, 0, 0.5, [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]])
+        #old weights: [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]]::::::::::, 
+        #                          2 3               4 5 6 7   8
+        neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,0.5,x)
+        neural_net.calculate([.05, .10])
         # ret = neural_net.calculate([.05,.10])
         # print(ret)
-        neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
+        #neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
         
     elif (sys.argv[1]=='example'):
         print('run example from class (single step)')
