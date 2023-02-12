@@ -60,10 +60,8 @@ class Neuron:
         #save input for backpropagation
         self.n_input = net
         
-        print('this is net before activation: ', net)
         output = self.activate(net)
         self.n_output = output
-        print('this is result of activate: ', output)
         return output
      
     #This method returns the derivative of the activation function with respect to the net   
@@ -77,12 +75,16 @@ class Neuron:
     
     #This method calculates the partial derivative for each weight and returns the delta*w to be used in the previous layer
     def calcpartialderivative(self, wtimesdelta):
-        #delta of output sub x can be written as derivative of the loss func * derivative of activation function
-        #derivatice of the error with respect to weight can be expressed as delta of current node
-
         self.partial_derivative = self.activationderivative() * wtimesdelta * self.n_input
         
-        self.partial_dervs = np.dot(self.partial_derivative, self.weights)
+        #self.partial_dervs = np.dot(self.partial_derivative, self.weights)
+        
+        print('before weights in self.weights: ', self.weights)
+        for item in self.weights:
+            self.partial_dervs.append(item*self.partial_derivative)
+        
+        print('weights in self.weights: ', self.weights)
+        print('partial derivatives: ', self.partial_dervs)
         
         #remember that self.pertial_dervs is an np_array
         return self.partial_dervs
@@ -134,7 +136,6 @@ class FullyConnected:
         neuron_calculations = []
         
         for i in range (0, len(self.neuron_list)):
-            print('\n')
             temp = self.neuron_list[i].calculate(input)
             neuron_calculations.append(temp)
     
@@ -142,13 +143,26 @@ class FullyConnected:
             
     #given the next layer's w*delta, should run through the neurons calling calcpartialderivative() for each (with the correct value), sum up its own w*delta, and then update the wieghts (using the updateweight() method). I should return the sum of w*delta.          
     def calcwdeltas(self, wtimesdelta):
-        ret = np.zeros((self.numOfNeurons, self.input_num))
-        for i, neuron in enumerate(self.neuron_list):
-            neuron_delta = neuron.calcpartialderivative(wtimesdelta[:,i])
-            ret[i,:] = neuron_delta
-            # neuron.updateweight()
-        return ret
-        print('calcwdeltas') 
+        sum_of_w_delta = 0
+        
+        wtimesdelta = np.array(wtimesdelta).flatten()
+        print('inside calcwdelts, this is wtimesdelta: ', wtimesdelta)
+        ret = np.zeros((self.numOfNeurons, len(self.weights)))
+        for i in range(0, len(self.neuron_list)):
+            sum_of_w_delta += wtimesdelta[i]
+            self.neuron_list[i].calcpartialderivative(wtimesdelta[i])
+        print('sum of w deltas:', sum_of_w_delta)
+        
+        #for i, neuron in enumerate(self.neuron_list):
+            #neuron.print_info()
+            #neuron_delta = neuron.calcpartialderivative(wtimesdelta[:,i])
+            #ret[i,:] = neuron_delta
+            #neuron.updateweight()
+        
+        print('calcwdeltas')
+        return np.sum(ret, axis=0)
+    
+         
     
     def print_info(self):
         print("fully_connected: num neurons: ", self.numOfNeurons, ' activation: ', self.activation, ' input_num: ', self.input_num, ' lr: ', self.lr, ' weights: ', self.weights)
@@ -196,7 +210,6 @@ class NeuralNetwork:
     
     #Given an input, calculate the output (using the layers calculate() method)
     def calculate(self,x):
-        print('this is input: ', x)
         x = np.array(x)
         current_input = x
         for i in range(0, len(self.layer_list)):
@@ -206,6 +219,8 @@ class NeuralNetwork:
             current_input = self.layer_list[i].calculate(current_input)
         
         self.y_hat = current_input
+        
+        #print('output of big calculate: \n', current_input)
         return current_input
         print('calculate')
         
@@ -213,7 +228,7 @@ class NeuralNetwork:
     def calculateloss(self,yp,y):
         # MSE
         self.loss = np.mean(np.square(yp - y))
-        print('calculateloss')
+        #print('calculateloss')
     
     #Given a predicted output and ground truth output simply return the derivative of the loss (depending on the loss function)        
     def lossderiv(self,yp,y):
@@ -221,17 +236,19 @@ class NeuralNetwork:
     
     #Given a single input and desired output preform one step of backpropagation (including a forward pass, getting the derivative of the loss, and then calling calcwdeltas for layers with the right values         
     def train(self,x,y):
-        self.calculate(x)
-        self.calculateloss(self.y_hat, y)
-        delta = np.empty((1,self.numOfNeurons))
+        out = self.calculate(x) #performing feed forward pass
+        calculated_loss = self.calculateloss(self.y_hat, y) #find derivative of the loss function
+        delta = np.empty((1,self.numOfNeurons[-1]))
 
-        for i in range(self.numOfNeurons):
+        for i in range(self.numOfNeurons[-1]):
             delta[:,i] = self.lossderiv(self.y_hat[i], y[i])
-        # print("delta", delta)
+        
+           
+        #print("delta", delta)
         for j in reversed(range(len(self.layer_list))):
             delta = self.layer_list[i].calcwdeltas(delta)
-            print("delta", j, delta)
-
+            #print("delta", j, delta)
+        
         print('train')
     
     def print_info(self):
@@ -253,10 +270,10 @@ if __name__=="__main__":
         #old weights: [[[.15,.25,.35],[.20,.30,.35]],[[.40,.50,.6],[.45,.55,.6]]]::::::::::, 
         #                          2 3               4 5 6 7   8
         neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,0.5,x)
-        neural_net.calculate([.05, .10])
-        # ret = neural_net.calculate([.05,.10])
-        # print(ret)
-        #neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
+        #neural_net.calculate([.05, .10])
+        ret = neural_net.calculate([.05,.10])
+        print('this is ret: ',ret)
+        neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
         
     elif (sys.argv[1]=='example'):
         print('run example from class (single step)')
