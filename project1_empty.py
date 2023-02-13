@@ -71,21 +71,16 @@ class Neuron:
         elif(self.activation == 1):
             #return (np.exp(self.n_input))/((np.exp(self.n_input)+1)**2)
             return self.output * (1 - self.output)
-        print('activationderivative')   
+        #print('activationderivative')   
     
     #This method calculates the partial derivative for each weight and returns the delta*w to be used in the previous layer
     def calcpartialderivative(self, wtimesdelta):
         self.partial_derivative = self.activationderivative() * wtimesdelta * self.n_input
         
-        #self.partial_dervs = np.dot(self.partial_derivative, self.weights)
-        
-        print('before weights in self.weights: ', self.weights)
-        for item in self.weights:
-            self.partial_dervs.append(item*self.partial_derivative)
-        
-        print('weights in self.weights: ', self.weights)
-        print('partial derivatives: ', self.partial_dervs)
-        
+        #print('weights in self.weights: ', self.weights)
+        #print('wtimesdelta: ', wtimesdelta)
+        self.partial_dervs = np.dot(self.partial_derivative, self.weights)
+        #print('my partial dervs, dog: ', self.partial_dervs)
         #remember that self.pertial_dervs is an np_array
         return self.partial_dervs
         
@@ -143,26 +138,32 @@ class FullyConnected:
             
     #given the next layer's w*delta, should run through the neurons calling calcpartialderivative() for each (with the correct value), sum up its own w*delta, and then update the wieghts (using the updateweight() method). I should return the sum of w*delta.          
     def calcwdeltas(self, wtimesdelta):
-        sum_of_w_delta = 0
         
+        #print('this is wtimesdelta inside layer lst: ', wtimesdelta)
         wtimesdelta = np.array(wtimesdelta).flatten()
-        print('inside calcwdelts, this is wtimesdelta: ', wtimesdelta)
-        ret = np.zeros((self.numOfNeurons, len(self.weights)))
+        #print('inside calcwdelts, this is wtimesdelta after flatten: ', wtimesdelta)
+        #print('len ', len(self.weights))
+        ret = np.zeros((self.numOfNeurons, (len(self.weights)+1)))
+        print('ret before loop: \n', ret)
+        
+        for i, neuron in enumerate(self.neuron_list):
+            neuron_delta = neuron.calcpartialderivative(wtimesdelta[i])
+            ret[i,:] = neuron_delta
+            neuron.updateweight()
+            
+        
+        print('ret after loop: \n\n\n', ret)
+
+        #print('calcwdeltas')
+        return np.sum(ret, axis=0)
+    
+        '''
         for i in range(0, len(self.neuron_list)):
             sum_of_w_delta += wtimesdelta[i]
             self.neuron_list[i].calcpartialderivative(wtimesdelta[i])
-        print('sum of w deltas:', sum_of_w_delta)
-        
-        #for i, neuron in enumerate(self.neuron_list):
-            #neuron.print_info()
-            #neuron_delta = neuron.calcpartialderivative(wtimesdelta[:,i])
-            #ret[i,:] = neuron_delta
-            #neuron.updateweight()
-        
-        print('calcwdeltas')
-        return np.sum(ret, axis=0)
-    
-         
+        '''
+        #print('sum of w deltas:', sum_of_w_delta)
+                 
     
     def print_info(self):
         print("fully_connected: num neurons: ", self.numOfNeurons, ' activation: ', self.activation, ' input_num: ', self.input_num, ' lr: ', self.lr, ' weights: ', self.weights)
@@ -206,21 +207,16 @@ class NeuralNetwork:
             #print(new_layer.weights)
             self.layer_list.append(new_layer)
          
-        print('constructor') 
+        #print('constructor') 
     
     #Given an input, calculate the output (using the layers calculate() method)
     def calculate(self,x):
         x = np.array(x)
         current_input = x
         for i in range(0, len(self.layer_list)):
-            #print('this is current input:', current_input)
-            # current_input.append(1.0)
             current_input = np.concatenate((current_input, [1.0]))
             current_input = self.layer_list[i].calculate(current_input)
-        
         self.y_hat = current_input
-        
-        #print('output of big calculate: \n', current_input)
         return current_input
         print('calculate')
         
@@ -239,17 +235,21 @@ class NeuralNetwork:
         out = self.calculate(x) #performing feed forward pass
         calculated_loss = self.calculateloss(self.y_hat, y) #find derivative of the loss function
         delta = np.empty((1,self.numOfNeurons[-1]))
-
-        for i in range(self.numOfNeurons[-1]):
-            delta[:,i] = self.lossderiv(self.y_hat[i], y[i])
+        delta = delta.flatten()
+        #print('this is delta initially: ',delta)
         
-           
+        for i in range(self.numOfNeurons[-1]):
+            delta[i] = self.lossderiv(self.y_hat[i], y[i])
+        
+        #print('this is delta after calculating loss derivative: ',delta[0])
+
         #print("delta", delta)
         for j in reversed(range(len(self.layer_list))):
             delta = self.layer_list[i].calcwdeltas(delta)
             #print("delta", j, delta)
-        
-        print('train')
+            #print(j)
+            
+        #print('train')
     
     def print_info(self):
         print(self.numOfLayers,' ',self.numOfNeurons,' ',self.inputSize,' ',self.activation,' ',self.loss,' ',self.lr)
