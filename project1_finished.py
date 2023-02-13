@@ -245,11 +245,12 @@ if __name__=="__main__":
         lr = 0.5
         x = [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]] 
         #                          2 3               4 5 6 7   8
+        
         neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,lr,x)
         ret = neural_net.calculate([.05,.10])
         neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
         for i in range(0,10):
-            neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
+             neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
         
         #####################################################################
         
@@ -258,9 +259,11 @@ if __name__=="__main__":
         neural_net2.train(np.array([0.05, .10]), np.array([.01, .99]))
         for i in range(0,10):
             neural_net2.train(np.array([0.05, .10]), np.array([.01, .99]))
-            
-        print(neural_net.loss_list)
-        print('ret:', ret)
+        
+         
+        #print(neural_net.loss_list, '\n')
+        print(neural_net2.loss_list)
+        #print('ret:', ret)
         
         plt.scatter(neural_net2.loss_list, neural_net2.iteration, color='orange', label='0.1 lr')
         plt.scatter(neural_net.loss_list, neural_net.iteration, color='blue', label='0.5 lr')
@@ -283,9 +286,12 @@ if __name__=="__main__":
         #                          2 3               4 5 6 7   8
         neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,lr,w)
         ret = neural_net.calculate(x)
+        
+        print('weights before training:\n', neural_net.weights)
         neural_net.train(x,e_o)
+        print('weights after training:\n', neural_net.weights)
 
-        print(ret)
+        print('output: ',ret)
         
     elif(sys.argv[2]=='and'):
         x = np.array([1,0])  #<- this is input
