@@ -53,6 +53,7 @@ class Neuron:
         #find the sum of the inputs * weights
         net = 0        
         sum = 0
+
         for i in range(0, (len(input))):
             sum = input[i] * self.weights[i]
             net += sum
@@ -142,17 +143,17 @@ class FullyConnected:
     def calcwdeltas(self, wtimesdelta):
         
         wtimesdelta = np.array(wtimesdelta).flatten()
-
+        print('wdelta',wtimesdelta)
         ret = np.zeros((self.numOfNeurons, (len(self.weights)+1)))
-        #print('ret before loop: \n', ret)
+        #ret = np.zeros((self.numOfNeurons, (len(wtimesdelta))))
+
+        print('ret below\n',ret)
         
         for i, neuron in enumerate(self.neuron_list):
             neuron_delta = neuron.calcpartialderivative(wtimesdelta[i])
             ret[i,:] = neuron_delta
-            #neuron.print_info()
             neuron.updateweight()
         
-        #print('ret in calcwdeltas: \n', ret)
         return np.sum(ret, axis=0)
                  
     
@@ -249,31 +250,65 @@ if __name__=="__main__":
         #neural_net.calculate([.05, .10])
         ret = neural_net.calculate([.05,.10])
         neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
+        print('ret:', ret)
         
-        print('len of sys.arg: ', len(sys.argv))
-        
-        '''
-        for layer in neural_net.layer_list:
-            for neuron in layer.neuron_list:
-                neuron.print_info()
-        '''
-        
-    elif (sys.argv[1]=='example'):
+    elif (sys.argv[2]=='example'):
         print('run example from class (single step)')
         w=np.array([[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]]) #<- this is weight
         x=np.array([0.05,0.1])                                              #<- this is input
         e_o = np.array([0.01,0.99])                                         #<- this is expected output
-        
+        lr = sys.argv[1]
+        lr = float(lr)
         #                          2 3               4 5 6 7   8
-        neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,0.5,w)
+        neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,lr,w)
         ret = neural_net.calculate(x)
         neural_net.train(x,e_o)
 
         print(ret)
         
-    elif(sys.argv[1]=='and'):
+    elif(sys.argv[2]=='and'):
+        x = np.array([1,0])  #<- this is input
+
+        e_o = np.array([0])    #<- this is expected output
+        lr = sys.argv[1]
+        lr = float(lr)         #<- this is learning rate
+        w = np.array([[.5,.5,.5]])  #<- this is weight
+        #network parameters:
+            #self -- omitted 1
+            #numOfLayers     2
+            #numOfNeurons    3
+            #inputSize       4
+            #activation      5
+            #loss            6
+            #lr              7
+            #weights         8
+        #                          2, 3              4  5  6  7   8
+        neural_net = NeuralNetwork(1, np.array([1]), 2, 1, 0, lr, w)
+        ret = neural_net.calculate(x)
+        print('ret:', ret)
+        #neural_net.train(x, e_o)
         print('learn and')
         
-    elif(sys.argv[1]=='xor'):
+    elif(sys.argv[2]=='xor'):
+        x = np.array([1,0])  #<- this is input
+
+        e_o = np.array([1])    #<- this is expected output
+        lr = sys.argv[1]
+        lr = float(lr)         #<- this is learning rate
+        w = np.array([[.5,.5,.5]])  #<- this is weight
+        #network parameters:
+            #self -- omitted 1
+            #numOfLayers     2
+            #numOfNeurons    3
+            #inputSize       4
+            #activation      5
+            #loss            6
+            #lr              7
+            #weights         8
+        #                          2, 3              4  5  6  7   8
+        neural_net = NeuralNetwork(1, np.array([1]), 2, 1, 0, lr, w)
+        ret = neural_net.calculate(x)
+        print('ret:', ret)
+        #neural_net.train(x, e_o)
         print('learn xor')
         
