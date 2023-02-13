@@ -1,4 +1,5 @@
 import numpy as np
+import matplotlib.pyplot as plt
 import sys
 """
 For this entire file there are a few constants:
@@ -143,6 +144,8 @@ class FullyConnected:
 class NeuralNetwork:
     #initialize with the number of layers, number of neurons in each layer (vector), input size, activation (for each layer), the loss function, the learning rate and a 3d matrix of weights weights (or else initialize randomly)
     def __init__(self, numOfLayers, numOfNeurons, inputSize, activation, loss, lr, weights=None):
+        self.iteration = []
+        self.train_count = 0
         self.numOfLayers = numOfLayers
         self.numOfNeurons = list(numOfNeurons)
         self.inputSize = inputSize
@@ -150,6 +153,7 @@ class NeuralNetwork:
         self.loss = loss
         self.lr = lr
         self.layer_list = []
+        self.loss_list = []
         
         if(weights is None):
             self.weights = []
@@ -186,7 +190,13 @@ class NeuralNetwork:
     #Given a predicted output and ground truth output simply return the loss (depending on the loss function)
     def calculateloss(self,yp,y):
         # MSE
-        self.loss = np.mean(np.square(yp - y))
+        #self.loss = np.mean(np.square(yp - y))
+        if(self.loss == 0):
+            return np.mean(np.square(yp - y))
+        elif(self.loss == 1):
+            t0 = (1-y) * np.log(1-yp + 1e-7)
+            t1 = y * np.log(yp + 1e-7)
+            return -np.mean(t0+t1, axis=0)
     
     #Given a predicted output and ground truth output simply return the derivative of the loss (depending on the loss function)        
     def lossderiv(self,yp,y):
@@ -194,8 +204,9 @@ class NeuralNetwork:
     
     #Given a single input and desired output preform one step of backpropagation (including a forward pass, getting the derivative of the loss, and then calling calcwdeltas for layers with the right values         
     def train(self,x,y):
+        self.iteration.append(self.train_count)
         out = self.calculate(x) #performing feed forward pass
-        calculated_loss = self.calculateloss(self.y_hat, y) #find derivative of the loss function
+        self.loss_list.append(self.calculateloss(self.y_hat, y)) #find derivative of the loss function
         delta = np.empty((1,self.numOfNeurons[-1]))
         delta = delta.flatten()
         
@@ -204,12 +215,17 @@ class NeuralNetwork:
 
         for j in reversed(range(len(self.layer_list))):
             delta = self.layer_list[j].calcwdeltas(delta)
+        self.train_count += 1
     
     def print_info(self):
         print(self.numOfLayers,' ',self.numOfNeurons,' ',self.inputSize,' ',self.activation,' ',self.loss,' ',self.lr)
 
+
+
+###############        NEED TO GRAPH AND ADD SECOND LOSS FUNCTION        ##############
 if __name__=="__main__":
     if (len(sys.argv)<2):
+        print('usage: python project1_finished.py [learning rate] ["and" , "xor" , "example"]\n If no learning rate is specified it will be set to 0.5 and run the "example" option.')
         #network parameters:
             #self -- omitted 1
             #numOfLayers     2
@@ -219,12 +235,36 @@ if __name__=="__main__":
             #loss            6
             #lr              7
             #weights         8
+        lr = 0.5
         x = [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]] 
         #                          2 3               4 5 6 7   8
-        neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,0.5,x)
+        neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,lr,x)
         ret = neural_net.calculate([.05,.10])
         neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
+        for i in range(0,10):
+            neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
+        
+        #####################################################################
+        
+        neural_net2 = NeuralNetwork(2,np.array([2,2]),2,1,0,0.1,x)
+        ret2 = neural_net2.calculate([.05,.10])
+        neural_net2.train(np.array([0.05, .10]), np.array([.01, .99]))
+        for i in range(0,10):
+            neural_net2.train(np.array([0.05, .10]), np.array([.01, .99]))
+            
+        print(neural_net.loss_list)
         print('ret:', ret)
+        
+        plt.scatter(neural_net2.loss_list, neural_net2.iteration, color='orange', label='0.1 lr')
+        plt.scatter(neural_net.loss_list, neural_net.iteration, color='blue', label='0.5 lr')
+        plt.xticks([0.22,0.24,0.26,0.28,0.30], ['0.30','0.28','0.26','0.24','0.22'])
+        plt.yticks([0,2,4,6,8,10], ['10','8','6','4','2','0'])
+        plt.xlabel('Loss')
+        plt.ylabel('Training Iteration')
+        plt.title("Loss Vs. Training Iteration")
+        plt.legend()
+    
+        plt.show()
         
     elif (sys.argv[2]=='example'):
         print('run example from class (single step)')
