@@ -78,32 +78,14 @@ class Neuron:
     def calcpartialderivative(self, wtimesdelta):
         self.partial_derivative = self.activationderivative() * wtimesdelta * self.n_input
         
-        #print('weights in self.weights: ', self.weights)
-        #print('wtimesdelta: ', wtimesdelta)
         self.partial_dervs = np.dot(self.partial_derivative, self.weights)
-        #print('my partial dervs, dog: ', self.partial_dervs)
-        #remember that self.pertial_dervs is an np_array
-        return self.partial_dervs
-        
-        #return delta*weights
-        '''
-        dE_dw = np.zeros(self.input_num+1)
-        dE_dO = np.sum(wtimesdelta)
-        dO_dnet = self.activationderivative()
 
-        delta = dE_dO * dO_dnet
-        #for i in range(self.input_num):
-           # dE_dw = delta * weights
-        #print('calcpartialderivative') 
-        '''
+        return self.partial_dervs
     
     #Simply update the weights using the partial derivatives and the leranring weight
     def updateweight(self):
-        #print('current weight:\n', self.weights)
         for i in range(0, len(self.weights)):
             self.weights[i] = self.weights[i] - (self.lr * self.partial_dervs[i])
-        #print('new weights: \n', self.weights, '\n')
-       
         
     def print_info(self):
         print('Neuron info: Activation: ', self.activation, ' input_num: ', self.input_num, ' learning rate: ', self.lr, ' weights: ', self.weights)
@@ -143,11 +125,7 @@ class FullyConnected:
     def calcwdeltas(self, wtimesdelta):
         
         wtimesdelta = np.array(wtimesdelta).flatten()
-        print('wdelta',wtimesdelta)
         ret = np.zeros((self.numOfNeurons, (len(self.weights)+1)))
-        #ret = np.zeros((self.numOfNeurons, (len(wtimesdelta))))
-
-        print('ret below\n',ret)
         
         for i, neuron in enumerate(self.neuron_list):
             neuron_delta = neuron.calcpartialderivative(wtimesdelta[i])
@@ -204,13 +182,11 @@ class NeuralNetwork:
             current_input = self.layer_list[i].calculate(current_input)
         self.y_hat = current_input
         return current_input
-        print('calculate')
         
     #Given a predicted output and ground truth output simply return the loss (depending on the loss function)
     def calculateloss(self,yp,y):
         # MSE
         self.loss = np.mean(np.square(yp - y))
-        #print('calculateloss')
     
     #Given a predicted output and ground truth output simply return the derivative of the loss (depending on the loss function)        
     def lossderiv(self,yp,y):
@@ -228,7 +204,6 @@ class NeuralNetwork:
 
         for j in reversed(range(len(self.layer_list))):
             delta = self.layer_list[j].calcwdeltas(delta)
-            #print('this is j: ', j)
     
     def print_info(self):
         print(self.numOfLayers,' ',self.numOfNeurons,' ',self.inputSize,' ',self.activation,' ',self.loss,' ',self.lr)
@@ -247,7 +222,6 @@ if __name__=="__main__":
         x = [[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]] 
         #                          2 3               4 5 6 7   8
         neural_net = NeuralNetwork(2,np.array([2,2]),2,1,0,0.5,x)
-        #neural_net.calculate([.05, .10])
         ret = neural_net.calculate([.05,.10])
         neural_net.train(np.array([0.05, .10]), np.array([.01, .99]))
         print('ret:', ret)
