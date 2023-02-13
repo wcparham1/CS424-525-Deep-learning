@@ -62,6 +62,7 @@ class Neuron:
         net = 0        
         sum = 0
 
+        #sum up input to neuron
         for i in range(0, (len(input))):
             sum = input[i] * self.weights[i]
             net += sum
@@ -76,6 +77,7 @@ class Neuron:
     #This method returns the derivative of the activation function with respect to the net   
     def activationderivative(self):
         if(self.activation == 0):
+            #logistic activation returns 1
             return (1)
         elif(self.activation == 1):
             #return (np.exp(self.n_input))/((np.exp(self.n_input)+1)**2)
@@ -84,6 +86,7 @@ class Neuron:
     
     #This method calculates the partial derivative for each weight and returns the delta*w to be used in the previous layer
     def calcpartialderivative(self, wtimesdelta):
+        #find partial derivative
         self.partial_derivative = self.activationderivative() * wtimesdelta * self.n_input
         
         self.partial_dervs = np.dot(self.partial_derivative, self.weights)
@@ -92,9 +95,11 @@ class Neuron:
     
     #Simply update the weights using the partial derivatives and the leranring weight
     def updateweight(self):
+        #simply update our weights
         for i in range(0, len(self.weights)):
             self.weights[i] = self.weights[i] - (self.lr * self.partial_dervs[i])
         
+    #helper print function
     def print_info(self):
         print('Neuron info: Activation: ', self.activation, ' input_num: ', self.input_num, ' learning rate: ', self.lr, ' weights: ', self.weights)
 
@@ -109,6 +114,7 @@ class FullyConnected:
         self.lr = lr
         self.neuron_list = []
         
+        #initialize random weights if ungiven
         if(weights is None):
             self.weights = np.random.randint(1, 9, [self.input_num, self.numOfNeurons]) 
         else:
@@ -123,6 +129,7 @@ class FullyConnected:
     def calculate(self, input):
         neuron_calculations = []
         
+        #perform neuron activation calculations
         for i in range (0, len(self.neuron_list)):
             temp = self.neuron_list[i].calculate(input)
             neuron_calculations.append(temp)
@@ -132,6 +139,7 @@ class FullyConnected:
     #given the next layer's w*delta, should run through the neurons calling calcpartialderivative() for each (with the correct value), sum up its own w*delta, and then update the wieghts (using the updateweight() method). I should return the sum of w*delta.          
     def calcwdeltas(self, wtimesdelta):
         
+        #calculate the next layers wdelta and iterate
         wtimesdelta = np.array(wtimesdelta).flatten()
         ret = np.zeros((self.numOfNeurons, (len(self.weights)+1)))
         
@@ -140,9 +148,10 @@ class FullyConnected:
             ret[i,:] = neuron_delta
             neuron.updateweight()
         
+        #return the sum
         return np.sum(ret, axis=0)
                  
-    
+    #helper function to print information
     def print_info(self):
         print("fully_connected: num neurons: ", self.numOfNeurons, ' activation: ', self.activation, ' input_num: ', self.input_num, ' lr: ', self.lr, ' weights: ', self.weights)
            
@@ -162,6 +171,7 @@ class NeuralNetwork:
         self.layer_list = []
         self.loss_list = []
         
+        #initialize random weights if none are given
         if(weights is None):
             self.weights = []
             llsize = self.inputSize
@@ -175,6 +185,7 @@ class NeuralNetwork:
         else:
             self.weights = weights
 
+        #create networks according to specification
         for i in range(0, self.numOfLayers):
             if(self.numOfLayers <= 1):
                 new_layer = FullyConnected(self.numOfNeurons[i], self.activation, self.inputSize, self.lr, self.weights)
@@ -186,6 +197,7 @@ class NeuralNetwork:
     
     #Given an input, calculate the output (using the layers calculate() method)
     def calculate(self,x):
+        #perform large calculation
         x = np.array(x)
         current_input = x
         for i in range(0, len(self.layer_list)):
