@@ -112,6 +112,9 @@ class ConvolutionalLayer:
 
         #the formula for number of neurons in a layer is:
         num_neurons_in_layer = ((((self.input_dimensions[0] - kernel_size) / 1) + 1) * (((self.input_dimensions[1] - kernel_size) / 1) + 1)) * num_kernels
+        self.output_height = ((self.input_dimensions[0] - kernel_size) / 1) + 1
+        self.output_length = ((self.input_dimensions[1] - kernel_size) / 1) + 1
+        
         self.num_neurons_in_layer = num_neurons_in_layer
         #set weights for each particular kernel, this will make neuron weight assignment easier
         if(num_kernels == 1):
@@ -130,7 +133,7 @@ class ConvolutionalLayer:
                 reshaped_weights = np.reshape(self.kernel_weights[i], (self.kernel_size, self.kernel_size))
                 #print('reshaped weights: ', reshaped_weights)
                 self.neurons.append(Neuron(activation, 1, self.learning_rate, reshaped_weights))
-        
+        '''
         print('kernel weights')
         print(self.kernel_weights)
         
@@ -142,12 +145,52 @@ class ConvolutionalLayer:
         
         print('len of neur list: ', len(self.neurons))
         for x in self.neurons:
-            print(x.weights)    
+            print(x.weights)
+        '''    
     #calculate the activation of a cnn layer
     def calculate(self, input):  
         #the input to each neuron should be the values that correspond to the kernel entries
         #multiplied together then sent in to the neuron calculate.
-        print('cat')     
+    
+        x_off = 0
+        y_off = 0
+        
+        #try:
+        counter = 0
+        for neuron in self.neurons:
+            print('iteration: ', counter, 'xoff: ', x_off, 'yoff: ', y_off)
+            in_vals = []
+            for x in range(0, self.kernel_size):
+                for y in range(0, self.kernel_size):
+                    #print('x + xoff: ', x+x_off, 'y + y_off: ', y+y_off)
+                    in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
+                    #print((input[x + x_off][y + y_off]))
+                    
+            if y_off < self.output_length:
+                y_off += 1
+                print('inside x_off: ', x_off)
+            if y_off == self.output_length:
+                y_off = 0
+                x_off += 1
+                '''
+            elif y_off >= self.output_length:
+                y_off = 0
+                x_off += 1 
+                print('inside y_off: ', y_off)
+            else:
+                y_off = 0
+                x_off = 0
+                '''
+                
+            counter += 1
+            #print('this is in_vals before reshape: \n', in_vals)
+            in_vals = np.array(in_vals)
+            in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
+            print('this is in_vals after reshape: \n', in_vals)  
+         
+            
+        #except:
+            #print('We tried!')
     
     def print_info(self):
         print('The following data is inside the convolutional layer: \n') 
@@ -292,15 +335,17 @@ if __name__=="__main__":
         print('usage: python project1_suann.py [example|and|or]')
         
         #self, num_kernels, kernel_size, activation_function, input_dimensions, learning_rate, weights = None
-        w = np.array([[1,2,3,4],[5,6,7,8]])
-        num_kers = 2
-        ker_size = 2
+        w = np.array([[0,0,0],[0,1,0],[0,0,0]])
+        num_kers = 1
+        ker_size = 3
         a_func = 1
         input_dims = np.array([4,4,1])
         lr = 0.3
         
-        c = ConvolutionalLayer(num_kers, ker_size, a_func, input_dims, lr, w)
-        c.print_info()
+        c = ConvolutionalLayer(num_kers, ker_size, a_func, input_dims, lr)
+        input = np.array([[1,2,3,4,],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
+        c.calculate(input)
+        #c.print_info()
         
         
     elif (sys.argv[1]=='example'):
