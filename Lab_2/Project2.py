@@ -1,4 +1,5 @@
 #William C. Parham, Coby White
+#Project 1 code provided by Lekpam Nkawula
 #Lab 2 Convolution Neural Network
 #March 1, 2023
 
