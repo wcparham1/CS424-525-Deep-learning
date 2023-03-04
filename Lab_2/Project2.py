@@ -93,14 +93,14 @@ class ConvolutionalLayer:
         self.kernels = []
         
         #if weights is uninitialized initialize randomly
-        if(weights == None):
+        if(weights is None):
             num_weights = (((self.kernel_size * self.kernel_size)) * self.num_kernels)
-            for i in range(0, num_weights):
-                self.weights.append(np.random.rand())
-            
-            #reshape our weights to match the layout of our kernel(square)
-            self.weights = np.reshape(self.weights, (self.kernel_size, self.kernel_size))
-            
+            for i in range(0, num_kernels):
+                x = []
+                for j in range(0, int(num_weights/num_kernels)):
+                    x.append(np.random.rand())
+                    
+                self.weights.append(x)
         else:
             #we are going to assume (hardcode) that the weights be passed in the same shape as our kernel.
             self.weights = weights
@@ -112,25 +112,61 @@ class ConvolutionalLayer:
 
         #the formula for number of neurons in a layer is:
         num_neurons_in_layer = ((((self.input_dimensions[0] - kernel_size) / 1) + 1) * (((self.input_dimensions[1] - kernel_size) / 1) + 1)) * num_kernels
-        
+        self.num_neurons_in_layer = num_neurons_in_layer
         #set weights for each particular kernel, this will make neuron weight assignment easier
-        for i in range(num_kernels):
-                self.kernel_weights.append(weights[i])
+        if(num_kernels == 1):
+            self.kernel_weights.append(self.weights)
+        else:
+            for i in range(num_kernels):
+                    self.kernel_weights.append(self.weights[i])
         
         #calculate how many neurons per channel
-        neurons_per_channel = num_neurons_in_layer / num_kernels
+        neurons_per_channel = int(num_neurons_in_layer / num_kernels) #################################### CASTING AS FLOAT HERE #########################################
         
         #append each neuron with the same weight
         for i in range(0, len(self.kernel_weights)):
             for j in range(0, neurons_per_channel):
-                self.neurons.append(Neuron(activation, 1, self.kernel_weights[i]))
+                #print(self.kernel_weights[i])
+                reshaped_weights = np.reshape(self.kernel_weights[i], (self.kernel_size, self.kernel_size))
+                #print('reshaped weights: ', reshaped_weights)
+                self.neurons.append(Neuron(activation, 1, self.learning_rate, reshaped_weights))
+        
+        print('kernel weights')
+        print(self.kernel_weights)
+        
+        print('weights')
+        print(self.weights)
             
-            
+        print('number of neurons in layer: ', num_neurons_in_layer)
+        print('neurons per channel: ', neurons_per_channel)
+        
+        print('len of neur list: ', len(self.neurons))
+        for x in self.neurons:
+            print(x.weights)    
     #calculate the activation of a cnn layer
     def calculate(self, input):  
         #the input to each neuron should be the values that correspond to the kernel entries
         #multiplied together then sent in to the neuron calculate.
-        print('cat')        
+        print('cat')     
+    
+    def print_info(self):
+        print('The following data is inside the convolutional layer: \n') 
+        print('num_kernels: ', self.num_kernels)
+        print('kernel_size: ', self.kernel_size)
+        print('activation: ', self.activation)
+        print('input_dimensions: ', self.input_dimensions) 
+        print('num_kernels: ', self.learning_rate) 
+        print('padding: ', self.padding)
+        print('stride: ', self.stride)
+        print('weights: ', self.weights)
+        print('num neurons in layer: ', self.num_neurons_in_layer)
+        print('kernel_specific_weights: ', self.kernel_weights)
+        print('neuron weights: \n')
+        
+        count = 0
+        for x in self.neurons:
+            print(count, ' ', x.weights,'\n')
+            count += 1
         
           
 #A fully connected layer        
@@ -256,7 +292,15 @@ if __name__=="__main__":
         print('usage: python project1_suann.py [example|and|or]')
         
         #self, num_kernels, kernel_size, activation_function, input_dimensions, learning_rate, weights = None
-        c = ConvolutionalLayer(1, 5, 1, np.array([2,2,3]), 0.3)
+        w = np.array([[1,2,3,4],[5,6,7,8]])
+        num_kers = 2
+        ker_size = 2
+        a_func = 1
+        input_dims = np.array([4,4,1])
+        lr = 0.3
+        
+        c = ConvolutionalLayer(num_kers, ker_size, a_func, input_dims, lr, w)
+        c.print_info()
         
         
     elif (sys.argv[1]=='example'):
