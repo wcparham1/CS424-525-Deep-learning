@@ -219,46 +219,34 @@ class MaxPoolingLayer():
         y_off = 0
         res = []
         
-        for i in range(0, counts):
-            in_vals = []
-            if x_off > self.kernel_size:
-                x_off = 0
-                y_off += self.kernel_size
-            print(x_off, y_off)
-
-            for x in range(0, self.kernel_size):
-                for y in range(0, self.kernel_size):
-                    in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
-                    
-            if y_off < self.output_length:
-                y_off += self.kernel_size
-            if y_off == self.output_length:
-                y_off = 0
-                x_off += self.kernel_size
-            in_vals = np.array(in_vals)
-            in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
-            
-            print(in_vals)
-        '''
         try:
-            for i in range(0, counts):         
+            for i in range(0, counts):
                 in_vals = []
+            
                 for x in range(0, self.kernel_size):
                     for y in range(0, self.kernel_size):
                         in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
-                print(in_vals)
-                if y_off < self.output_length:
-                    y_off += self.kernel_size
-                if y_off == self.output_length:
+            
+                if(y_off >= self.kernel_size):
                     y_off = 0
                     x_off += self.kernel_size
-            
+                elif(y_off < self.kernel_size):
+                    y_off += self.kernel_size
+                
                 res.append(np.max(in_vals))
-                print('this is res: ', res)
+            #in_vals = np.array(in_vals)
+            #in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
+            
+                
         except:
-            print('we tried and have a result!')
-            print(res)
-        '''
+            print('we tried!', res)
+        
+        print('output len: ', self.output_length, 'output height: ', self.output_height)
+        #print(res)
+        print(np.reshape(res, (int(self.output_length), int(self.output_height))))
+        #return np.reshape(res, (self.output_length, self.output_height))
+            
+            
         
           
 #A fully connected layer        
@@ -396,7 +384,7 @@ if __name__=="__main__":
         out = c.calculate(input)
         print('output of convolutional layer: \n', out)
         
-        m = MaxPoolingLayer(2,np.array([4,4,1]))
+        m = MaxPoolingLayer(3,np.array([4,4,1]))
         m.calculate(input)
         #c.print_info()
         
