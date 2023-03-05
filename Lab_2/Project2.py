@@ -210,19 +210,21 @@ class MaxPoolingLayer():
         
     def calculate(self, input):
                     
+        #determine how many times to loop
         self.output_height = ((self.input_dims[0] - self.kernel_size) / self.kernel_size) + 1
         self.output_length = ((self.input_dims[1] - self.kernel_size) / self.kernel_size) + 1
-
         counts = int(self.output_height * self.output_length)
      
         x_off = 0
         y_off = 0
         res = []
+        res_locs = []
         
+        #find our maxes
         try:
             for i in range(0, counts):
                 in_vals = []
-            
+
                 for x in range(0, self.kernel_size):
                     for y in range(0, self.kernel_size):
                         in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
@@ -233,18 +235,21 @@ class MaxPoolingLayer():
                 elif(y_off < self.kernel_size):
                     y_off += self.kernel_size
                 
+                #append our max value
                 res.append(np.max(in_vals))
-            #in_vals = np.array(in_vals)
-            #in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
-            
-                
         except:
-            print('we tried!', res)
+            print('We tried! The results are: \n', res)
         
-        print('output len: ', self.output_length, 'output height: ', self.output_height)
-        #print(res)
-        print(np.reshape(res, (int(self.output_length), int(self.output_height))))
-        #return np.reshape(res, (self.output_length, self.output_height))
+        #find location of our maxes
+        for i in range(0, len(res)):
+            rows,cols = np.where(input == res[i])
+            rc_tuppy = [rows, cols]
+            res_locs.append(rc_tuppy)
+        
+        self.max_locations = res_locs
+        print(res_locs)
+       #print(np.reshape(res, (int(self.output_length), int(self.output_height))))
+        return np.reshape(res, (int(self.output_length), int(self.output_height)))
             
             
         
