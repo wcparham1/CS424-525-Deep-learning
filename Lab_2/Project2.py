@@ -60,7 +60,6 @@ class Neuron:
         self.net = np.sum(res) 
         self.output = self.activate(self.net)
         
-        #print('this is self.output: ', self.output)
         return self.output
 
     #This method returns the derivative of the activation function 
@@ -174,30 +173,14 @@ class ConvolutionalLayer:
             in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
             
             #perform convolution
-            #print('invals: \n', in_vals)
             activate_return = neuron.cnn_calculate(in_vals) 
             res.append(activate_return)
             
         res = np.reshape(res, (len(res)//2, len(res)//2))
         return res
-        #for neuron in self.neurons:
-            #print('neuron weights: \n', neuron.weights)
-            #print('neuron input: \n', neuron.input)
-            #print('neuron net: \n', neuron.net)
-            #print('neuron output: \n', neuron.output)
-            
-            #print('\n')
-            
-            #print('output: \n', neuron.output, '\n net: \n', neuron.net, '\n')
-        
-       
-        
-        
-        '''
-        for i in range(0, len(self.neurons)):
-            print('This is input for neuron at ',i,': \n', self.neurons[i].input)
-        '''
-        
+    
+
+    #Helper function to print info for the layer        
     def print_info(self):
         print('The following data is inside the convolutional layer: \n') 
         print('num_kernels: ', self.num_kernels)
@@ -216,8 +199,67 @@ class ConvolutionalLayer:
         for x in self.neurons:
             print(count, ' ', x.weights,'\n')
             count += 1
+            
+
+class MaxPoolingLayer():
+    
+    def __init__(self, kernel_size, input_dimensions):
+        self.kernel_size = kernel_size
+        self.input_dims = input_dimensions
+        self.stride = kernel_size
         
+    def calculate(self, input):
+                    
+        self.output_height = ((self.input_dims[0] - self.kernel_size) / self.kernel_size) + 1
+        self.output_length = ((self.input_dims[1] - self.kernel_size) / self.kernel_size) + 1
+
+        counts = int(self.output_height * self.output_length)
      
+        x_off = 0
+        y_off = 0
+        res = []
+        
+        for i in range(0, counts):
+            in_vals = []
+            if x_off > self.kernel_size:
+                x_off = 0
+                y_off += self.kernel_size
+            print(x_off, y_off)
+
+            for x in range(0, self.kernel_size):
+                for y in range(0, self.kernel_size):
+                    in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
+                    
+            if y_off < self.output_length:
+                y_off += self.kernel_size
+            if y_off == self.output_length:
+                y_off = 0
+                x_off += self.kernel_size
+            in_vals = np.array(in_vals)
+            in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
+            
+            print(in_vals)
+        '''
+        try:
+            for i in range(0, counts):         
+                in_vals = []
+                for x in range(0, self.kernel_size):
+                    for y in range(0, self.kernel_size):
+                        in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
+                print(in_vals)
+                if y_off < self.output_length:
+                    y_off += self.kernel_size
+                if y_off == self.output_length:
+                    y_off = 0
+                    x_off += self.kernel_size
+            
+                res.append(np.max(in_vals))
+                print('this is res: ', res)
+        except:
+            print('we tried and have a result!')
+            print(res)
+        '''
+        
           
 #A fully connected layer        
 class FullyConnected:
@@ -351,7 +393,11 @@ if __name__=="__main__":
         
         c = ConvolutionalLayer(num_kers, ker_size, a_func, input_dims, lr, w)
         input = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
-        c.calculate(input)
+        out = c.calculate(input)
+        print('output of convolutional layer: \n', out)
+        
+        m = MaxPoolingLayer(2,np.array([4,4,1]))
+        m.calculate(input)
         #c.print_info()
         
         
