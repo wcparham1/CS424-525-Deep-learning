@@ -39,7 +39,7 @@ class Neuron:
         return 1/(1+np.exp(-net)) 
         
     #Calculate the output of the neuron should save the input and 
-    # output for back-propagation.   
+    #output for back-propagation.   
     def calculate(self,input):
 
         self.input = np.array(input) 
@@ -48,6 +48,7 @@ class Neuron:
 
         return self.output
     
+    #special class that performs convolution on a neuron level
     def cnn_calculate(self, input):
         
         self.input = input
@@ -56,6 +57,7 @@ class Neuron:
             for j in range(0, len(input[i])):
                 res.append(input[i][j] * self.weights[i][j])
         
+        #Maybe account for bias here? <-- Unsure
         #res.append(1)
         self.net = np.sum(res) 
         self.output = self.activate(self.net)
@@ -102,9 +104,9 @@ class ConvolutionalLayer:
         self.padding = 1
         self.stride = 1
         self.weights = [] #vector of weights for each neuron
-        self.neurons = []
-        self.kernel_weights = []
-        self.kernels = []
+        self.neurons = [] #vector to hold each neuron
+        self.kernel_weights = [] #vector that holds groups of kernel weights
+        self.kernels = []  # <-- unused fossil too nervous to delete this
         
         #if weights is uninitialized initialize randomly
         if(weights is None):
@@ -157,6 +159,7 @@ class ConvolutionalLayer:
         y_off = 0
         res = []
         
+        #calculate the output of the convolutional layer
         for neuron in self.neurons:
             in_vals = []
             for x in range(0, self.kernel_size):
@@ -169,6 +172,7 @@ class ConvolutionalLayer:
                 y_off = 0
                 x_off += 1
                 
+            #reshape array to help visualize it.  This also helps for adding convolutional layer ... I expect input to be x * y matrix. 
             in_vals = np.array(in_vals)
             in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
             
@@ -203,6 +207,7 @@ class ConvolutionalLayer:
 
 class MaxPoolingLayer():
     
+    #Max pooling initialization
     def __init__(self, kernel_size, input_dimensions):
         self.kernel_size = kernel_size
         self.input_dims = input_dimensions
@@ -246,12 +251,26 @@ class MaxPoolingLayer():
             rc_tuppy = [rows, cols]
             res_locs.append(rc_tuppy)
         
+        #save location of maxes        
         self.max_locations = res_locs
-        print(res_locs)
-       #print(np.reshape(res, (int(self.output_length), int(self.output_height))))
+
+        #return our pooling layer output!
         return np.reshape(res, (int(self.output_length), int(self.output_height)))
             
-            
+
+
+class FlattenLayer: 
+    
+    def __init__(self, input_size):
+        self.input_size = input_size
+    
+    def calculate(self, input):
+        
+        length = self.input_size[0] * self.input_size[1] * self.input_size[2]
+        res = np.resize(input (length, 1))
+        
+        return res
+          
         
           
 #A fully connected layer        
