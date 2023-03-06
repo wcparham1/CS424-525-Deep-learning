@@ -42,10 +42,23 @@ class Neuron:
     #output for back-propagation.   
     def calculate(self,input):
 
-        self.input = np.array(input) 
+        '''
+        self.input = np.array(input)
         self.net = np.matmul(self.input,self.weights)
+        #print('net: ', self.net)
+        self.net = np.sum(self.net)
         self.output = self.activate(self.net)
-
+        #print('output: ', self.output)
+        '''
+        
+        input_by_weight_sum = 0
+        
+        for i in range(0, len(self.weights)):
+            input_by_weight_sum += self.weights[i] * input[i]
+        
+        self.net = input_by_weight_sum
+        self.output = self.activate(self.net)
+        
         return self.output
     
     #special class that performs convolution on a neuron level
@@ -58,7 +71,7 @@ class Neuron:
                 res.append(input[i][j] * self.weights[i][j])
         
         #Maybe account for bias here? <-- Unsure
-        #res.append(1)
+        res.append(1)
         self.net = np.sum(res) 
         self.output = self.activate(self.net)
         
@@ -121,17 +134,17 @@ class ConvolutionalLayer:
             #we are going to assume (hardcode) that the weights be passed in the same shape as our kernel.
             self.weights = weights
         
-        
         #maybe the weight matrix is the kernel
         #and each neuron in the output is attached to a kernel that shares these weights?
         #now initialize each neuron in the layer
-
+        
         #the formula for number of neurons in a layer is:
         num_neurons_in_layer = ((((self.input_dimensions[0] - kernel_size) / 1) + 1) * (((self.input_dimensions[1] - kernel_size) / 1) + 1)) * num_kernels
         self.output_height = ((self.input_dimensions[0] - kernel_size) / 1) + 1
         self.output_length = ((self.input_dimensions[1] - kernel_size) / 1) + 1
         
         self.num_neurons_in_layer = num_neurons_in_layer
+        
         #set weights for each particular kernel, this will make neuron weight assignment easier
         if(num_kernels == 1):
             self.kernel_weights.append(self.weights)
@@ -140,49 +153,120 @@ class ConvolutionalLayer:
                     self.kernel_weights.append(self.weights[i])
         
         #calculate how many neurons per channel
+        #print('neurons per layer: ', num_neurons_in_layer, 'num kernels: ', num_kernels)
         neurons_per_channel = int(num_neurons_in_layer / num_kernels) #################################### CASTING AS FLOAT HERE #########################################
         
         #append each neuron with the same weight
         for i in range(0, len(self.kernel_weights)):
+            x = []
             for j in range(0, neurons_per_channel):
-                #print(self.kernel_weights[i])
                 reshaped_weights = np.reshape(self.kernel_weights[i], (self.kernel_size, self.kernel_size))
-                #print('reshaped weights: ', reshaped_weights)
-                self.neurons.append(Neuron(activation, 1, self.learning_rate, reshaped_weights))
-  
+                neuron = Neuron(activation, 1, self.learning_rate, reshaped_weights)
+                self.neurons.append(neuron)
+                x.append(neuron)
+                
+            self.kernels.append(x)
+            
+        
+            
+        
     #calculate the activation of a cnn layer
     def calculate(self, input):  
         #the input to each neuron should be the values that correspond to the kernel entries
         #multiplied together then sent in to the neuron calculate.
-    
-        x_off = 0
-        y_off = 0
-        res = []
+        #print(self.input_dimensions)
         
+        ret = []
+        local_maps = []
+        #print('dimensions of input: ', np.ndim(input), '----- in conv layer!')
         #calculate the output of the convolutional layer
-        for neuron in self.neurons:
-            in_vals = []
-            for x in range(0, self.kernel_size):
-                for y in range(0, self.kernel_size):
-                    in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
-                    
-            if y_off < self.output_length:
-                y_off += 1
-            if y_off == self.output_length:
+        if(np.ndim(input) < 3):
+            for i in range(0, len(self.kernels)):
+                activation_res = []
+                x_off = 0
                 y_off = 0
-                x_off += 1
-                
-            #reshape array to help visualize it.  This also helps for adding convolutional layer ... I expect input to be x * y matrix. 
-            in_vals = np.array(in_vals)
-            in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
+                count = 0
+                for neuron in self.kernels[i]:
+                    in_vals = []
+                    #in_vals = input[x_off:self.kernel_size+1, y_off:self.kernel_size+1]
+                    for x in range(0, self.kernel_size):
+                        for y in range(0, self.kernel_size):
+                            in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
+
+                    #offset rules --- probably works    
+                    if y_off < self.output_length:
+                        y_off += 1
+                    if y_off == self.output_length:
+                        y_off = 0
+                        x_off += 1
+
+                    #reshape arrays for visualization
+                    in_vals = np.array(in_vals)
+                    in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
+                    activate_return = neuron.cnn_calculate(in_vals) 
+                    activation_res.append(activate_return)
+
+                    count += 1
+                    
+                #reshape output to help with visualization and input
+                activation_res = np.reshape(activation_res, (int(self.output_height), int(self.output_length)))
+                #print('activation res:\n', activation_res)
+                ret.append(activation_res)
+            return ret
+
+        
+        #terrible way of handling how to calculate input when working with more than 1 input feature map.
+        else:
+            for z in range(0, len(input)):
+                for i in range(0, len(self.kernels)):
+                    activation_res = []
+                    x_off = 0
+                    y_off = 0
+                    count = 0
+                    for neuron in self.kernels[i]:
+                        in_vals = []
+                        #in_vals = input[x_off:self.kernel_size+1, y_off:self.kernel_size+1]
+                        for x in range(0, self.kernel_size):
+                            for y in range(0, self.kernel_size):
+                                in_vals = np.append(in_vals, (input[z][x + x_off][y + y_off]))
+
+                        #offset rules --- probably works    
+                        if y_off < self.output_length:
+                            y_off += 1
+                        if y_off == self.output_length:
+                            y_off = 0
+                            x_off += 1
+
+                        #reshape arrays for visualization
+                        in_vals = np.array(in_vals)
+                        in_vals = np.reshape(in_vals, (self.kernel_size, self.kernel_size))
+                        
+                        #find the activation of the neuron
+                        activate_return = neuron.cnn_calculate(in_vals) 
+                        activation_res.append(activate_return)
+
+                        count += 1
+                        
+                    #reshape output to help with visualization and input
+                    #activation_res = np.reshape(activation_res, (int(self.output_height), int(self.output_length)))
+                    local_maps.append(activation_res)
+                    
+            temp1 = local_maps[0]
+            temp2 = local_maps[1]
             
-            #perform convolution
-            activate_return = neuron.cnn_calculate(in_vals) 
-            res.append(activate_return)
+            ret = []
+            for i in range(0,len(temp1)):
+                sum = temp1[i] + temp2[i]
+                #print('sum: ', sum, i)
+                ret.append(sum)
+
+            ret = np.array(ret)
+            ret = np.reshape(ret, (int(self.output_height), int(self.output_length)))
             
-        res = np.reshape(res, (len(res)//2, len(res)//2))
-        return res
-    
+            return ret
+        return ret
+            
+            
 
     #Helper function to print info for the layer        
     def print_info(self):
@@ -203,9 +287,11 @@ class ConvolutionalLayer:
         for x in self.neurons:
             print(count, ' ', x.weights,'\n')
             count += 1
+     
+     
             
-
-class MaxPoolingLayer():
+#A class which represents a max pooling layer
+class MaxPoolingLayer:
     
     #Max pooling initialization
     def __init__(self, kernel_size, input_dimensions):
@@ -259,6 +345,7 @@ class MaxPoolingLayer():
             
 
 
+#A class which represents a flatten layer
 class FlattenLayer: 
     
     def __init__(self, input_size):
@@ -266,8 +353,8 @@ class FlattenLayer:
     
     def calculate(self, input):
         
-        length = self.input_size[0] * self.input_size[1] * self.input_size[2]
-        res = np.resize(input (length, 1))
+        length = int(self.input_size[0] * self.input_size[1] * self.input_size[2])
+        res = np.resize(input, (length, 1))
         
         return res
           
@@ -283,9 +370,10 @@ class FullyConnected:
         self.lr = lr
         self.weights = weights 
 
+        #print('this is weights: ', self.weights)
         self.Neurons = []
         for i in range(self.numOfNeurons):
-            self.Neurons.append(Neuron(self.activation,self.input_num,self.lr,self.weights[i]))
+            self.Neurons.append(Neuron(self.activation,self.input_num,self.lr,self.weights)) #changed from appending weights[i] #3/6/2023 because we only add one layer at a time.
         
     #calculate the output of all the neurons in the layer and 
     # return a vector with those values (go through the neurons 
@@ -315,6 +403,7 @@ class FullyConnected:
         
 #An entire neural network        
 class NeuralNetwork:
+    
     #initialize with the number of layers, number of neurons in each layer (vector), 
     # input size, activation (for each layer), the loss function, the learning rate 
     # and a 3d matrix of weights weights (or else initialize randomly)
@@ -324,6 +413,7 @@ class NeuralNetwork:
         self.inputSize = inputSize 
         self.loss = loss
         self.lr = lr
+        self.Layers = []
 
         
     #add layer will add layers
@@ -331,16 +421,22 @@ class NeuralNetwork:
     #numOfNeurons, input_num, correspond only to fc layer
     #num_kernels, kernel_size, input_dimensions correspond only to cn layer
     #we can toggle between layer type by specifying cnn_layer
-    def addLayer(self, activation, lr, weights, cnn_layer, numOfNeurons=None,  input_num=None,  num_kernels=None, kernel_size=None, input_dimensions=None):
+    def addLayer(self, layer_type, activation=None, lr=None, weights=None, numOfNeurons=None, input_num=None, num_kernels=None, kernel_size=None, input_dimensions=None):
         
-        if(cnn_layer == False):
+        if(layer_type == 'fc'):
             #we will append the new fully connected layer with the inputted values.  
             #This will reflect how keras adds layers.
             self.Layers.append(FullyConnected(numOfNeurons, activation, input_num, lr, weights))
-        elif(cnn_layer == True):
+        elif(layer_type == 'cn'):
             #we will append the new convolutional layer with the inputted values.
             #this will reflect how keras adds layers.
             self.Layers.append(ConvolutionalLayer(num_kernels, kernel_size, activation, input_dimensions, lr, weights))
+        elif(layer_type == 'flat'):
+            #we will append a flatten layer to our network.
+            self.Layers.append(FlattenLayer(input_dimensions))
+        elif(layer_type == 'max_pool'):
+            #we will add a max pooling layer
+            self.Layers.append(MaxPoolingLayer(kernel_size=kernel_size, input_dimensions=input_dimensions))
         else:
             print('please specify what type of layer you would like.\n cnn_layer = False for fc, True for Cn')
             
@@ -349,12 +445,11 @@ class NeuralNetwork:
     def calculate(self,input):
         results = self.Layers[0].calculate(input)
 
-        for i in range(1,self.numOfLayers):
+        for i in range(1,len(self.Layers)):
             results = self.Layers[i].calculate(results)
 
         return results[:-1]
 
-        
     #Given a predicted output and ground truth output simply 
     # return the loss (depending on the loss function)
     def calculateloss(self,y,yp):
@@ -393,24 +488,70 @@ class NeuralNetwork:
 #Main
 if __name__=="__main__":
     if (len(sys.argv)<2):
-        print('usage: python project1_suann.py [example|and|or]')
+        print('usage: python project2.py [example1|example2|example3]')
         
         #self, num_kernels, kernel_size, activation_function, input_dimensions, learning_rate, weights = None
         w = np.array([[0,0,0],[0,1,0],[0,0,0]])
         num_kers = 1
         ker_size = 3
         a_func = 1
-        input_dims = np.array([4,4,1])
+        input_dims = np.array([5,5,1])
         lr = 0.3
         
         c = ConvolutionalLayer(num_kers, ker_size, a_func, input_dims, lr, w)
-        input = np.array([[1,2,3,4],[5,6,7,8],[9,10,11,12],[13,14,15,16]])
+        input = np.array([[1,2,3,4,0],[5,6,7,8,0],[9,10,11,12,0],[13,14,15,16,0],[17,18,19,20,0]])
         out = c.calculate(input)
         print('output of convolutional layer: \n', out)
         
         m = MaxPoolingLayer(3,np.array([4,4,1]))
         m.calculate(input)
-        #c.print_info()
+    
+    #def addLayer(self, activation, lr, weights, cnn_layer, numOfNeurons=None,  input_num=None,  num_kernels=None, kernel_size=None, input_dimensions=None):
+    elif (sys.argv[1] == 'example1'):
+        print('Running example 1 from the lab write up.')
+        
+        w = np.array([[0,0,0],[0,1,0],[0,0,0]])
+        num_kers = 1
+        ker_size = 3
+        a_func = 1
+        input_dims = np.array([4,4,1])
+        lr = 0.3
+        input = np.array([[1,2,3,4,0],[5,6,7,8,0],[9,10,11,12,0],[13,14,15,16,0],[17,18,19,20,0]])
+
+        neural_net = NeuralNetwork(np.array([5,5,1]), 1, 0.3)
+        neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=1, kernel_size=3, input_dimensions=np.array([5,5,1]))
+        neural_net.addLayer(layer_type='flat', input_dimensions=np.array([3,3,1]))
+        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([1,2,3,4,5,6,7,8,9]))
+        
+        print(neural_net.calculate(input))
+    
+    
+    elif(sys.argv[1] == 'example2'):
+        print('Running example 2 from the lab write up.')
+        
+        w = np.array([[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]]])
+        a_func = 1
+        input_dims = np.array([7,7,1])
+        lr = 0.3
+        input = np.array([[1,2,3,4,5,6,7],[8,9,10,11,12,13,14],[15,16,17,18,19,20,21],[22,23,24,25,26,27,28],[29,30,31,32,33,34,35],[36,37,38,39,40,41,42],[43,44,45,46,47,48,49]])
+
+        #[ 1, 2, 3, 4, 5, 6, 7]
+        #[ 8, 9,10,11,12,13,14]
+        #[15,16,17,18,19,20,21]
+        #[22,23,24,25,26,27,28]
+        
+        #[29,30, 31,32,33, 34,35]
+        #[36,37, 38,39,40, 41,42]
+        #[43,44, 45,46,47, 48,49]
+        
+        neural_net = NeuralNetwork(np.array([7,7,1]), 1, 0.3)
+        neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=2, kernel_size=3, input_dimensions=np.array([7,7,2]))
+        w = np.array([[0,0,0],[0,1,0],[0,0,0]])
+        neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=1, kernel_size=3, input_dimensions=np.array([5,5,2]))
+        neural_net.addLayer(layer_type='flat', input_dimensions=np.array([3,3,1]))
+        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([1,2,3,4,5,6,7,8,9]))
+
+        print(neural_net.calculate(input))
         
         
     elif (sys.argv[1]=='example'):
@@ -519,16 +660,6 @@ if __name__=="__main__":
             plt.ylabel("Binary cross entropy loss")
         plt.legend(loc="upper right")
         plt.show()
-
-        # print("yp=", yps)
-        # print("y=",y)
-        # print("loss=", loss)
-
-        # plt.plot(losses)
-        # plt.title("Loss function vs epoch")
-        # plt.xlabel("Epoch")
-        # plt.ylabel("Loss")
-        # plt.show()
 
     
     elif(sys.argv[1]=='and'):
@@ -731,34 +862,3 @@ if __name__=="__main__":
         plt.show()
 
         
-#fossil from Convolutional layer class
-'''
-        ksize = kernel_size * kernel_size
-        
-        #multiple layer kernels will produce multiple layer feature maps
-        weight_index = 0
-        for i in range(0, num_kernels):
-            for k in range(0, ksize):
-                self.neurons.append(Neuron(activation, 1, learning_rate, self.weights[weight_index]))
-                weight_index += 1
-'''
-#fossil from neuralnetwork class
-'''
-        self.numOfLayers = numOfLayers
-        self.numOfNeurons = numOfNeurons
-        self.weights = weights 
-        self.Layers = []
-        self.activation = activation
-        
-        if self.weights is None:
-            self.weights = []
-            for i in range(numOfLayers):
-                weight = np.random.rand(numOfNeurons[i],inputSize[i])
-                
-                self.weights.append(weight)
-
-        self.Layers = []
-        for i in range(self.numOfLayers):
-            self.Layers.append(FullyConnected(self.numOfNeurons[i],self.activation[i],
-                self.inputSize[i],self.lr,self.weights[i]))
-'''
