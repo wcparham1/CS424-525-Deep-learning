@@ -50,14 +50,16 @@ class Neuron:
         self.output = self.activate(self.net)
         #print('output: ', self.output)
         '''
-        
+        print('this is input in neuron:', input)
         input_by_weight_sum = 0
         
         for i in range(0, len(self.weights)):
             input_by_weight_sum += self.weights[i] * input[i]
         
         self.net = input_by_weight_sum
+        print('this is self.net: ', self.net)
         self.output = self.activate(self.net)
+        print('this is self.output: ', self.output)
         
         return self.output
     
@@ -168,8 +170,6 @@ class ConvolutionalLayer:
             self.kernels.append(x)
             
         
-            
-        
     #calculate the activation of a cnn layer
     def calculate(self, input):  
         #the input to each neuron should be the values that correspond to the kernel entries
@@ -264,7 +264,7 @@ class ConvolutionalLayer:
             ret = np.reshape(ret, (int(self.output_height), int(self.output_length)))
             
             return ret
-        return ret
+        #return ret
             
             
 
@@ -308,17 +308,21 @@ class MaxPoolingLayer:
      
         x_off = 0
         y_off = 0
-        res = []
-        res_locs = []
         
-        #find our maxes
-        try:
+        res_locs = []
+        ret = []
+
+        #find our maxes        
+        for z in range (0, len(input)):
+            frame_res = []
             for i in range(0, counts):
                 in_vals = []
-
+                x_off = 0
+                y_off = 0
+                
                 for x in range(0, self.kernel_size):
                     for y in range(0, self.kernel_size):
-                        in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
+                        in_vals = np.append(in_vals, (input[z][x + x_off][y + y_off]))
             
                 if(y_off >= self.kernel_size):
                     y_off = 0
@@ -327,22 +331,32 @@ class MaxPoolingLayer:
                     y_off += self.kernel_size
                 
                 #append our max value
-                res.append(np.max(in_vals))
-        except:
-            print('We tried! The results are: \n', res)
+                #frame_res.append(np.max(in_vals))
+                
+                frame_res = np.append(frame_res, np.max(in_vals))
+
+            #reshape frame results and append to return value
+            frame_res = np.reshape(frame_res,(int(self.output_length), int(self.output_height))) 
+            #print(frame_res)           
+            ret.append(frame_res)
         
-        #find location of our maxes
-        for i in range(0, len(res)):
-            rows,cols = np.where(input == res[i])
-            rc_tuppy = [rows, cols]
-            res_locs.append(rc_tuppy)
-        
+        #loop through all our entries in ret and find the location of the max.
+        max_locs = []
+        for index,channel in enumerate(ret):
+            local_max = []
+            for row in channel:
+                for entry in row:
+                    rows,cols = np.where(input[index] == entry)
+                    rc_tuppy = [rows, cols]
+                    local_max.append(rc_tuppy)
+            max_locs.append(local_max)
+                    
         #save location of maxes        
-        self.max_locations = res_locs
+        self.max_locations = max_locs
 
         #return our pooling layer output!
-        return np.reshape(res, (int(self.output_length), int(self.output_height)))
-            
+        return ret
+
 
 
 #A class which represents a flatten layer
@@ -379,6 +393,7 @@ class FullyConnected:
     # return a vector with those values (go through the neurons 
     # and call the calculate() method)      
     def calculate(self, input):
+        #print('this is input: ', input)
         results = []
         for neuron in self.Neurons:
             results.append(neuron.calculate(input))
@@ -490,33 +505,18 @@ if __name__=="__main__":
     if (len(sys.argv)<2):
         print('usage: python project2.py [example1|example2|example3]')
         
-        #self, num_kernels, kernel_size, activation_function, input_dimensions, learning_rate, weights = None
-        w = np.array([[0,0,0],[0,1,0],[0,0,0]])
-        num_kers = 1
-        ker_size = 3
-        a_func = 1
-        input_dims = np.array([5,5,1])
-        lr = 0.3
-        
-        c = ConvolutionalLayer(num_kers, ker_size, a_func, input_dims, lr, w)
-        input = np.array([[1,2,3,4,0],[5,6,7,8,0],[9,10,11,12,0],[13,14,15,16,0],[17,18,19,20,0]])
-        out = c.calculate(input)
-        print('output of convolutional layer: \n', out)
-        
-        m = MaxPoolingLayer(3,np.array([4,4,1]))
-        m.calculate(input)
     
     #def addLayer(self, activation, lr, weights, cnn_layer, numOfNeurons=None,  input_num=None,  num_kernels=None, kernel_size=None, input_dimensions=None):
     elif (sys.argv[1] == 'example1'):
         print('Running example 1 from the lab write up.')
         
-        w = np.array([[0,0,0],[0,1,0],[0,0,0]])
+        w = np.array([[1,2,3],[4,5,6],[7,8,9]])
         num_kers = 1
         ker_size = 3
         a_func = 1
         input_dims = np.array([4,4,1])
         lr = 0.3
-        input = np.array([[1,2,3,4,0],[5,6,7,8,0],[9,10,11,12,0],[13,14,15,16,0],[17,18,19,20,0]])
+        input = np.array([[1,2,3,4,5],[5,6,7,8,8],[9,10,11,12,13],[13,14,15,16,17],[17,18,19,20,21]])
 
         neural_net = NeuralNetwork(np.array([5,5,1]), 1, 0.3)
         neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=1, kernel_size=3, input_dimensions=np.array([5,5,1]))
@@ -533,17 +533,14 @@ if __name__=="__main__":
         a_func = 1
         input_dims = np.array([7,7,1])
         lr = 0.3
-        input = np.array([[1,2,3,4,5,6,7],[8,9,10,11,12,13,14],[15,16,17,18,19,20,21],[22,23,24,25,26,27,28],[29,30,31,32,33,34,35],[36,37,38,39,40,41,42],[43,44,45,46,47,48,49]])
+        input = np.array([[1,2, 3, 4, 5, 6, 7],
+                          [ 8, 9,10,11,12,13,14],
+                          [15,16,17,18,19,20,21],
+                          [22,23,24,25,26,27,28],
+                          [29,30,31,32,33,34,35],
+                          [36,37,38,39,40,41,42],
+                          [43,44,45,46,47,48,49]])
 
-        #[ 1, 2, 3, 4, 5, 6, 7]
-        #[ 8, 9,10,11,12,13,14]
-        #[15,16,17,18,19,20,21]
-        #[22,23,24,25,26,27,28]
-        
-        #[29,30, 31,32,33, 34,35]
-        #[36,37, 38,39,40, 41,42]
-        #[43,44, 45,46,47, 48,49]
-        
         neural_net = NeuralNetwork(np.array([7,7,1]), 1, 0.3)
         neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=2, kernel_size=3, input_dimensions=np.array([7,7,2]))
         w = np.array([[0,0,0],[0,1,0],[0,0,0]])
@@ -553,312 +550,29 @@ if __name__=="__main__":
 
         print(neural_net.calculate(input))
         
+    elif(sys.argv[1] == 'example3'):
+        print('Running example 3 from the lab write up.')
         
-    elif (sys.argv[1]=='example'):
-        print('run example from class (1 steps)')
-        w=np.array([[[.15,.2,.35],[.25,.3,.35]],[[.4,.45,.6],[.5,.55,.6]]])
-        x=np.array([[0.05,0.1,1]])        # 1 input
-        y=np.array([[0.01,0.99]])         # 1 output 
+        w = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[10,11,12],[13,14,15],[16,17,18]]])
+        a_func = 1
+        input_dims = np.array([7,7,1])
+        lr = 0.3
 
-        # Normalization of inputs 
-        x = np.array([i/np.linalg.norm(i) for i in x])
-        y = np.array([i/np.linalg.norm(i) for i in y])
-
-        numOfLayers  = len(w)
-        numOfNeurons = [len(w[i]) for i in range(numOfLayers)]
-        inputSize    = [len(w[i][0]) for i in range(numOfLayers)]
-        # numOfLayers  = 2
-        # numOfNeurons = [2,2]
-        # inputSize    = [3,3]
-        activation   = [0,0]
-        los         = 0
-        lr           = 0.5
-
-        # initialize neural network with the right layers, inputs, outputs
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.001)
-
-        losses = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.01)
-
-        losses1 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses1.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss1=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.1)
-
-        losses2 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses2.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss2=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,1)
-
-        losses3 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses3.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss3=", loss)
-
-        s = "Sigmoid function"
-        if NN.activation[0] == 0:
-            s = "Linear function"
-
-#       Plot loss vs epoch 
-        plt.plot(losses, label="lr = 0.001")
-        plt.plot(losses1, label="lr = 0.01")
-        plt.plot(losses2, label="lr = 0.1")
-        plt.plot(losses3, label="lr = 1")
-        plt.title("The example problem\n Number of hidden layer = %d, Activation function = %s\nLoss function vs epoch for different learning rates" % (NN.numOfLayers-1, s) )
-        plt.xlabel("Epoch")
-        if NN.loss == 0:
-            plt.ylabel("Squared error loss")
-        else:
-            plt.ylabel("Binary cross entropy loss")
-        plt.legend(loc="upper right")
-        plt.show()
-
-    
-    elif(sys.argv[1]=='and'):
-        print('learn and')
-        w=np.array([[[1,1,-1.5]]])                    # single layer
-        x=np.array([[0,0,1],[0,1,1],[1,0,1],[1,1,1]]) # 4 different inputs 
-        y=np.array([[0],[0],[0],[1]])                 # 4 outputs 
-
-        numOfLayers  = 1
-        numOfNeurons = np.array([1])
-        inputSize    = np.array([3])
-        activation   = [0]
-        los          = 0
-        lr           = 1
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.001)
-
-        losses = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.01)
-
-        losses1 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses1.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss1=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.1)
-
-        losses2 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses2.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss2=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,1)
-
-        losses3 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses3.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss3=", loss)
-
-        s = "Sigmoid function"
-        if NN.activation[0] == 0:
-            s = "Linear function"
-
-#       Plot loss vs epoch 
-        plt.semilogy(losses, label="lr = 0.001")
-        plt.semilogy(losses1, label="lr = 0.01")
-        plt.semilogy(losses2, label="lr = 0.1")
-        plt.semilogy(losses3, label="lr = 1")
-        plt.title("The AND problem\n Number of hidden layer = %d, Activation function = %s\nLoss function vs epoch for different learning rates" % (NN.numOfLayers-1, s) )
-        plt.xlabel("Epoch")
-        if NN.loss == 0:
-            plt.ylabel("Squared error loss")
-        else:
-            plt.ylabel("Binary cross entropy loss")
-        plt.legend(loc="upper right")
-        plt.show()
-
+        input = np.array([[1, 2, 3, 4, 5 ,6, 7, 8],
+                          [ 9,10,11,12,13,14,15,16],
+                          [17,18,19,20,21,22,23,24],
+                          [25,26,27,28,29,30,31,32],
+                          [33,34,35,36,37,38,39,40],
+                          [41,42,43,44,45,46,47,48],
+                          [49,50,51,52,53,54,55,56],
+                          [57,58,59,60,61,62,63,64]])
         
-    elif(sys.argv[1]=='xor'):
-        print('learn xor')
-        # w=np.array([]) # randomly initialize weights for each neuron in each layer 
-        x=np.array([[0,0,1],[0,1,1],[1,0,1],[1,1,1]])  # 4 different inputs 
-        y=np.array([[0],[1],[1],[0]])                  # 4 outputs 
 
-        numOfLayers  = 2
-        numOfNeurons = np.array([2,1])
-        inputSize    = np.array([3,3])
-        activation   = [0,0]
-        los          = 0
-        lr           = 0.001
+        neural_net = NeuralNetwork(np.array([8,8,1]), 1, 0.3)
+        neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=2, kernel_size=3, input_dimensions=np.array([7,7,2]))
+        neural_net.addLayer(layer_type='max_pool', kernel_size=2, input_dimensions=np.array([6,6,2]))
+        neural_net.addLayer(layer_type='flat', input_dimensions=np.array([3,3,2]))
+        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=18, weights=np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]))
 
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.001)
-
-        losses = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.01)
-
-        losses1 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses1.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss1=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,0.1)
-
-        losses2 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses2.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss2=", loss)
-
-        NN = NeuralNetwork(numOfLayers,numOfNeurons,inputSize,activation,los,1)
-
-        losses3 = []
-        num_iters = 1000
-        for i in range(num_iters):
-            yps = []
-            for j in range(len(x)):
-                NN.train(x[j],y[j])
-                yp = NN.calculate(x[j])
-                yps.append(yp)
-            loss = NN.calculateloss(y,yps)
-            losses3.append(loss)
-
-        print("yp=", yps)
-        print("y=",y)
-        print("loss3=", loss)
-
-        s = "Sigmoid function"
-        if NN.activation[0] == 0:
-            s = "Linear function"
-
-#       Plot loss vs epoch 
-        plt.semilogy(losses, label="lr = 0.001")
-        plt.semilogy(losses1, label="lr = 0.01")
-        plt.semilogy(losses2, label="lr = 0.1")
-        # plt.semilogy(losses3, label="lr = 1")
-        plt.title("The XOR problem\n Number of hidden layer = %d, Activation function = %s\nLoss function vs epoch for different learning rates" % (NN.numOfLayers-1, s) )
-        plt.xlabel("Epoch")
-        if NN.loss == 0:
-            plt.ylabel("Squared error loss")
-        else:
-            plt.ylabel("Binary cross entropy loss")
-        plt.legend(loc="upper right")
-        plt.show()
-
+        print(neural_net.calculate(input))
         
