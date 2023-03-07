@@ -50,16 +50,13 @@ class Neuron:
         self.output = self.activate(self.net)
         #print('output: ', self.output)
         '''
-        print('this is input in neuron:', input)
         input_by_weight_sum = 0
         
         for i in range(0, len(self.weights)):
             input_by_weight_sum += self.weights[i] * input[i]
         
         self.net = input_by_weight_sum
-        print('this is self.net: ', self.net)
         self.output = self.activate(self.net)
-        print('this is self.output: ', self.output)
         
         return self.output
     
@@ -67,6 +64,7 @@ class Neuron:
     def cnn_calculate(self, input):
         
         self.input = input
+        
         res = []
         for i in range(0, len(input)):
             for j in range(0, len(input[i])):
@@ -188,7 +186,6 @@ class ConvolutionalLayer:
                 count = 0
                 for neuron in self.kernels[i]:
                     in_vals = []
-                    #in_vals = input[x_off:self.kernel_size+1, y_off:self.kernel_size+1]
                     for x in range(0, self.kernel_size):
                         for y in range(0, self.kernel_size):
                             in_vals = np.append(in_vals, (input[x + x_off][y + y_off]))
@@ -212,6 +209,7 @@ class ConvolutionalLayer:
                 activation_res = np.reshape(activation_res, (int(self.output_height), int(self.output_length)))
                 #print('activation res:\n', activation_res)
                 ret.append(activation_res)
+                
             return ret
 
         
@@ -264,8 +262,7 @@ class ConvolutionalLayer:
             ret = np.reshape(ret, (int(self.output_height), int(self.output_length)))
             
             return ret
-        #return ret
-            
+                    
             
 
     #Helper function to print info for the layer        
@@ -505,74 +502,91 @@ if __name__=="__main__":
     if (len(sys.argv)<2):
         print('usage: python project2.py [example1|example2|example3]')
         
-    
-    #def addLayer(self, activation, lr, weights, cnn_layer, numOfNeurons=None,  input_num=None,  num_kernels=None, kernel_size=None, input_dimensions=None):
+
     elif (sys.argv[1] == 'example1'):
         print('Running example 1 from the lab write up.')
-        
-        w = np.array([[1,2,3],[4,5,6],[7,8,9]])
+
+        w = np.array([[0.77132064, 0.02075195, 0.63364823],
+                      [0.74880388, 0.49850701, 0.22479665],
+                      [0.19806286, 0.76053071, 0.16911084]])
         num_kers = 1
         ker_size = 3
         a_func = 1
         input_dims = np.array([4,4,1])
         lr = 0.3
-        input = np.array([[1,2,3,4,5],[5,6,7,8,8],[9,10,11,12,13],[13,14,15,16,17],[17,18,19,20,21]])
+        input = np.array([[0.54254437, 0.14217005, 0.37334076, 0.67413362, 0.44183317],
+                          [0.43401399, 0.61776698, 0.51313824, 0.65039718, 0.60103895],
+                          [0.8052232,  0.52164715, 0.90864888, 0.31923609, 0.09045935],
+                          [0.30070006, 0.11398436, 0.82868133, 0.04689632, 0.62628715],
+                          [0.54758616, 0.819287,   0.19894754, 0.8568503,  0.35165264]])
 
         neural_net = NeuralNetwork(np.array([5,5,1]), 1, 0.3)
         neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=1, kernel_size=3, input_dimensions=np.array([5,5,1]))
         neural_net.addLayer(layer_type='flat', input_dimensions=np.array([3,3,1]))
-        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([1,2,3,4,5,6,7,8,9]))
-        
+        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([0.68535982, 0.95339335, 0.00394827, 0.51219226, 0.81262096, 0.61252607, 
+                                                                                                                      0.72175532, 0.29187607, 0.91777412]))
+
         print(neural_net.calculate(input))
     
     
     elif(sys.argv[1] == 'example2'):
         print('Running example 2 from the lab write up.')
         
-        w = np.array([[[0,0,0],[0,0,0],[0,0,0]],[[1,1,1],[1,1,1],[1,1,1]]])
+        w = np.array([[[0.77125, 0.02067, 0.63357], [0.74873, 0.49844, 0.22472], [0.19798, 0.76046, 0.16903]], 
+                      [[0.08828, 0.6853,  0.95333], [0.00388, 0.51213, 0.81256], [0.61246, 0.72169, 0.29181]]])
         a_func = 1
         input_dims = np.array([7,7,1])
         lr = 0.3
-        input = np.array([[1,2, 3, 4, 5, 6, 7],
-                          [ 8, 9,10,11,12,13,14],
-                          [15,16,17,18,19,20,21],
-                          [22,23,24,25,26,27,28],
-                          [29,30,31,32,33,34,35],
-                          [36,37,38,39,40,41,42],
-                          [43,44,45,46,47,48,49]])
+        input = np.array([[0.1650159,  0.39252924, 0.09346037, 0.82110566, 0.15115202, 0.38411445, 0.94426071],
+                          [0.98762547, 0.45630455, 0.82612284, 0.25137413, 0.59737165, 0.90283176, 0.53455795],
+                          [0.59020136, 0.03928177, 0.35718176, 0.07961309, 0.30545992, 0.33071931, 0.7738303 ],
+                          [0.03995921, 0.42949218, 0.31492687, 0.63649114, 0.34634715, 0.04309736, 0.87991517],
+                          [0.76324059, 0.87809664, 0.41750914, 0.60557756, 0.51346663, 0.59783665, 0.26221566],
+                          [0.30087131, 0.02539978, 0.30306256, 0.24207588, 0.55757819, 0.56550702, 0.47513225],
+                          [0.29279798, 0.06425106, 0.97881915, 0.33970784, 0.49504863, 0.97708073, 0.44077382]])
 
         neural_net = NeuralNetwork(np.array([7,7,1]), 1, 0.3)
         neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=2, kernel_size=3, input_dimensions=np.array([7,7,2]))
-        w = np.array([[0,0,0],[0,1,0],[0,0,0]])
+        w = np.array([[0.54199, 0.37278, 0.44127],
+                      [0.61721, 0.64984, 0.80466],
+                      [0.90809, 0.0899,  0.11342]])
         neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=1, kernel_size=3, input_dimensions=np.array([5,5,2]))
         neural_net.addLayer(layer_type='flat', input_dimensions=np.array([3,3,1]))
-        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([1,2,3,4,5,6,7,8,9]))
+        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([ 0.15698,  0.07829,  0.34997, -0.27036,  0.38755, -0.11766,  0.28534, -0.17335, 0.41462]))
 
         print(neural_net.calculate(input))
+   
         
     elif(sys.argv[1] == 'example3'):
         print('Running example 3 from the lab write up.')
         
-        w = np.array([[[1,2,3],[4,5,6],[7,8,9]],[[10,11,12],[13,14,15],[16,17,18]]])
+        w = np.array([[[0.77132064, 0.02075195, 0.63364823],
+                       [0.74880388, 0.49850701, 0.22479665],
+                       [0.19806286, 0.76053071, 0.16911084]],
+                      [[0.68535982, 0.95339335, 0.00394827],
+                       [0.51219226, 0.81262096, 0.61252607],
+                       [0.72175532, 0.29187607, 0.91777412]]])
         a_func = 1
         input_dims = np.array([7,7,1])
         lr = 0.3
 
-        input = np.array([[1, 2, 3, 4, 5 ,6, 7, 8],
-                          [ 9,10,11,12,13,14,15,16],
-                          [17,18,19,20,21,22,23,24],
-                          [25,26,27,28,29,30,31,32],
-                          [33,34,35,36,37,38,39,40],
-                          [41,42,43,44,45,46,47,48],
-                          [49,50,51,52,53,54,55,56],
-                          [57,58,59,60,61,62,63,64]])
+        input = np.array([[0.8568503,  0.35165264, 0.75464769, 0.29596171, 0.88393648, 0.32551164, 0.1650159,  0.39252924],
+                          [0.09346037, 0.82110566, 0.15115202, 0.38411445, 0.94426071, 0.98762547, 0.45630455, 0.82612284],
+                          [0.25137413, 0.59737165, 0.90283176, 0.53455795, 0.59020136, 0.03928177, 0.35718176, 0.07961309],
+                          [0.30545992, 0.33071931, 0.7738303,  0.03995921, 0.42949218, 0.31492687, 0.63649114, 0.34634715],
+                          [0.04309736, 0.87991517, 0.76324059, 0.87809664, 0.41750914, 0.60557756, 0.51346663, 0.59783665],
+                          [0.26221566, 0.30087131, 0.02539978, 0.30306256, 0.24207588, 0.55757819, 0.56550702, 0.47513225],
+                          [0.29279798, 0.06425106, 0.97881915, 0.33970784, 0.49504863, 0.97708073, 0.44077382, 0.31827281],
+                          [0.51979699, 0.57813643, 0.85393375, 0.06809727, 0.46453081, 0.78194912, 0.71860281, 0.58602198]])
         
 
         neural_net = NeuralNetwork(np.array([8,8,1]), 1, 0.3)
         neural_net.addLayer(layer_type='cn', activation=a_func, lr=lr, weights=w, num_kernels=2, kernel_size=3, input_dimensions=np.array([7,7,2]))
         neural_net.addLayer(layer_type='max_pool', kernel_size=2, input_dimensions=np.array([6,6,2]))
         neural_net.addLayer(layer_type='flat', input_dimensions=np.array([3,3,2]))
-        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=18, weights=np.array([1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18]))
+        neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=18, weights=np.array([0.44183317, 0.43401399, 0.61776698, 0.51313824, 0.65039718, 0.60103895,
+                                                                                                                       0.8052232,  0.52164715, 0.90864888, 0.31923609, 0.09045935, 0.30070006,
+                                                                                                                       0.11398436, 0.82868133, 0.04689632, 0.62628715, 0.54758616, 0.819287]))
 
         print(neural_net.calculate(input))
         
