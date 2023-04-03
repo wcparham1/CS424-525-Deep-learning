@@ -42,14 +42,6 @@ class Neuron:
     #output for back-propagation.   
     def calculate(self,input):
 
-        '''
-        self.input = np.array(input)
-        self.net = np.matmul(self.input,self.weights)
-        #print('net: ', self.net)
-        self.net = np.sum(self.net)
-        self.output = self.activate(self.net)
-        #print('output: ', self.output)
-        '''
         input_by_weight_sum = 0
         
         for i in range(0, len(self.weights)):
@@ -262,6 +254,14 @@ class ConvolutionalLayer:
             ret = np.reshape(ret, (int(self.output_height), int(self.output_length)))
             
             return ret
+    
+    
+    def calcpartialderivatives():
+        pass
+    
+    def calcwdeltas():
+        pass
+    
                     
             
 
@@ -353,6 +353,9 @@ class MaxPoolingLayer:
 
         #return our pooling layer output!
         return ret
+    
+    def calcwdeltas(sumwdeltas):
+        pass
 
 
 
@@ -368,7 +371,9 @@ class FlattenLayer:
         res = np.resize(input, (length, 1))
         
         return res
-          
+
+    def calcwdeltas(sumwdeltas):
+          pass
         
           
 #A fully connected layer        
@@ -526,7 +531,12 @@ if __name__=="__main__":
         neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([0.68535982, 0.95339335, 0.00394827, 0.51219226, 0.81262096, 0.61252607, 
                                                                                                                       0.72175532, 0.29187607, 0.91777412]))
 
-        print(neural_net.calculate(input))
+        print('Output of example 1: ', neural_net.calculate(input), '\n')
+        
+        print('weights after first iteration for convolutional layer: \n', neural_net.Layers[0].weights, '\n')
+        print('weights after first iteration for fully connected layer: \n', neural_net.Layers[2].weights, '\n')
+        
+        
     
     
     elif(sys.argv[1] == 'example2'):
@@ -554,7 +564,13 @@ if __name__=="__main__":
         neural_net.addLayer(layer_type='flat', input_dimensions=np.array([3,3,1]))
         neural_net.addLayer(layer_type='fc', numOfNeurons=1, activation=a_func, lr=lr, input_num=9, weights=np.array([ 0.15698,  0.07829,  0.34997, -0.27036,  0.38755, -0.11766,  0.28534, -0.17335, 0.41462]))
 
-        print(neural_net.calculate(input))
+        print('Output of example 2: ', neural_net.calculate(input), '\n')
+        
+        print('weights after first iteration for first convolutional layer: \n', neural_net.Layers[0].weights, '\n')
+        print('weights after first iteration for second convolutional layer: \n', neural_net.Layers[1].weights, '\n')
+        print('weights after first iteration for fully connected layer: \n', neural_net.Layers[3].weights, '\n')
+
+        
    
         
     elif(sys.argv[1] == 'example3'):
@@ -588,5 +604,8 @@ if __name__=="__main__":
                                                                                                                        0.8052232,  0.52164715, 0.90864888, 0.31923609, 0.09045935, 0.30070006,
                                                                                                                        0.11398436, 0.82868133, 0.04689632, 0.62628715, 0.54758616, 0.819287]))
 
-        print(neural_net.calculate(input))
+        print('Output of example 3: ', neural_net.calculate(input), '\n')
+        print('weights after first iteration for first convolutional layer: \n', neural_net.Layers[0].weights, '\n')
+        print('weights after first iteration for fully connected layer: \n', neural_net.Layers[3].weights, '\n')
+
         
