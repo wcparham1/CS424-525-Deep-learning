@@ -1,1 +1,1 @@
-this is the working directory for Lab_2 in CS424-525-Deep_Learning
+This is the directory for the cs 424 525 deep learning class!
