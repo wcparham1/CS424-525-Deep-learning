@@ -1,4 +1,8 @@
 from PIL import Image
 
-img = Image.open('training_set/training_set/cats/cat.1.jpg').convert('L')
-img.save('gray_scale_cat.jpg')
+for i in range(1, 4001):
+    fname = 'archive/training_set/cats/cat.' + str(i) + '.jpg'
+    img = Image.open(fname).convert('L')
+    sname = 'gray_scale_cat_'+str(i)+'.jpg'
+    img.save(sname)
+    
